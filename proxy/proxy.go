@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -98,24 +99,72 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
 	buff := make([]byte, 0xffff)
-	for {
-		n, err := src.Read(buff)
-		if err != nil {
-			p.err("Read failed '%s'\n", err)
-			return
+	var softErr error
+	if islocal {
+		for {
+			c := new(Conn)
+			c.reader = bufio.NewReader(src)
+			c.mr.reader = c.reader
+
+			var t byte
+			var r *msgReader
+			t, r, err := c.rxMsg()
+			if err != nil {
+				return
+			}
+
+			switch t {
+			case readyForQuery:
+				c.rxReadyForQuery(r)
+				return
+			// case rowDescription:
+			// case dataRow:
+			// case bindComplete:
+			// case commandComplete:
+			// 	commandTag = CommandTag(r.readCString())
+			default:
+				if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
+					softErr = e
+				}
+			}
+
+			// n, err := src.Read(buff)
+			// if err != nil {
+			// 	p.err("Read failed '%s'\n", err)
+			// 	return
+			// }
+			// b := buff[:n]
+			// //show output
+			//
+			//
+			// b = getModifiedBuffer(b, powerCallback)
+			// n, err = dst.Write(b)
+			//
+			// //write out result
+			// n, err = dst.Write(b)
+			// if err != nil {
+			// 	p.err("Write failed '%s'\n", err)
+			// 	return
+			// }
 		}
-		b := buff[:n]
-		//show output
-		if islocal {
-			b = getModifiedBuffer(b, powerCallback)
-			n, err = dst.Write(b)
-		} else {
+	} else {
+		for {
+			n, err := src.Read(buff)
+			if err != nil {
+				p.err("Read failed '%s'\n", err)
+				return
+			}
+			b := buff[:n]
 			//write out result
 			n, err = dst.Write(b)
-		}
-		if err != nil {
-			p.err("Write failed '%s'\n", err)
-			return
+			if err != nil {
+				p.err("Write failed '%s'\n", err)
+				return
+			}
+			if err != nil {
+				p.err("Write failed '%s'\n", err)
+				return
+			}
 		}
 	}
 }
