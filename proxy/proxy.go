@@ -1,19 +1,20 @@
 package proxy
 
 import (
-	"github.com/DimShadoWWW/power-pg/common"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
-	"io"
-	"encoding/binary"
-)
 
+	"github.com/DimShadoWWW/power-pg/common"
+)
 
 var (
 	connid = uint64(0)
 )
 
+// Start function
 func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
@@ -29,17 +30,16 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 		connid++
 
 		p := &proxy{
-			lconn:    conn,
-			laddr:    localAddr,
-			raddr:    remoteAddr,
-			erred:    false,
-			errsig:   make(chan bool),
-			prefix:   fmt.Sprintf("Connection #%03d ", connid),
+			lconn:  conn,
+			laddr:  localAddr,
+			raddr:  remoteAddr,
+			erred:  false,
+			errsig: make(chan bool),
+			prefix: fmt.Sprintf("Connection #%03d ", connid),
 		}
 		go p.start(powerCallback)
 	}
 }
-
 
 func getResolvedAddresses(localHost, remoteHost *string) (*net.TCPAddr, *net.TCPAddr) {
 	laddr, err := net.ResolveTCPAddr("tcp", *localHost)
@@ -49,13 +49,11 @@ func getResolvedAddresses(localHost, remoteHost *string) (*net.TCPAddr, *net.TCP
 	return laddr, raddr
 }
 
-
-func getListener(addr *net.TCPAddr) (*net.TCPListener) {
+func getListener(addr *net.TCPAddr) *net.TCPListener {
 	listener, err := net.ListenTCP("tcp", addr)
 	check(err)
 	return listener
 }
-
 
 type proxy struct {
 	sentBytes     uint64
@@ -67,7 +65,6 @@ type proxy struct {
 	prefix        string
 }
 
-
 func (p *proxy) err(s string, err error) {
 	if p.erred {
 		return
@@ -78,7 +75,6 @@ func (p *proxy) err(s string, err error) {
 	p.errsig <- true
 	p.erred = true
 }
-
 
 func (p *proxy) start(powerCallback common.Callback) {
 	defer p.lconn.Close()
@@ -96,7 +92,6 @@ func (p *proxy) start(powerCallback common.Callback) {
 	//wait for close...
 	<-p.errsig
 }
-
 
 func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 	//data direction
@@ -125,7 +120,6 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 	}
 }
 
-
 func getModifiedBuffer(buffer []byte, powerCallback common.Callback) []byte {
 	if powerCallback == nil || len(buffer) < 1 || string(buffer[0]) != "Q" || string(buffer[5:11]) != "power:" {
 		return buffer
@@ -133,7 +127,6 @@ func getModifiedBuffer(buffer []byte, powerCallback common.Callback) []byte {
 	query := powerCallback(string(buffer[5:]))
 	return makeMessage(query)
 }
-
 
 func makeMessage(query string) []byte {
 	queryArray := make([]byte, 0, 6+len(query))
@@ -145,7 +138,6 @@ func makeMessage(query string) []byte {
 
 }
 
-
 func check(err error) {
 	if err != nil {
 		warn(err.Error())
@@ -153,8 +145,6 @@ func check(err error) {
 	}
 }
 
-
 func warn(f string, args ...interface{}) {
 	fmt.Printf(f+"\n", args...)
 }
-
