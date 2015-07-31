@@ -79,7 +79,7 @@ func (p *proxy) err(s string, err error) {
 }
 
 func (p *proxy) start(powerCallback common.Callback) {
-	defer p.lconn.conn.Close()
+	// defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
 	if err != nil {
@@ -87,7 +87,7 @@ func (p *proxy) start(powerCallback common.Callback) {
 		return
 	}
 	p.rconn.conn = rconn
-	defer p.rconn.conn.Close()
+	// defer p.rconn.conn.Close()
 	//bidirectional copy
 	go p.pipe(p.lconn, p.rconn, powerCallback)
 	go p.pipe(p.rconn, p.lconn, nil)
