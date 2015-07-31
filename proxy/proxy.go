@@ -110,6 +110,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
+			fmt.Printf("Readed bytes: %d\n", n)
 			b := buff[:n]
 			r = buff[:n]
 			if remainingBytes > 0 && remainingBytes <= 0xffff {
