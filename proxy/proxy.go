@@ -102,9 +102,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	newPacket := true
 	var msg string
 	remainingBytes := 0
-	var r readBuf
 	if islocal {
 		for {
+			var r readBuf
 			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
@@ -113,6 +113,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			fmt.Printf("Readed bytes: %d\n", n)
 			b := buff[:n]
 			r = buff[:n]
+			fmt.Printf("%#v\n", r.byte())
 			if remainingBytes > 0 && remainingBytes <= 0xffff {
 				newPacket = true
 				msg = msg + string(r.next(remainingBytes))
