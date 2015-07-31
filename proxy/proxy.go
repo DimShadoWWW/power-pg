@@ -32,7 +32,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 		connid++
 
 		p := &proxy{
-			lconn:  &Conn{conn: conn},
+			lconn:  Conn{conn: conn},
 			laddr:  localAddr,
 			raddr:  remoteAddr,
 			erred:  false,
@@ -61,7 +61,7 @@ type proxy struct {
 	sentBytes     uint64
 	receivedBytes uint64
 	laddr, raddr  *net.TCPAddr
-	lconn, rconn  *Conn
+	lconn, rconn  Conn
 	erred         bool
 	errsig        chan bool
 	prefix        string
@@ -89,8 +89,8 @@ func (p *proxy) start(powerCallback common.Callback) {
 	p.rconn.conn = rconn
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, powerCallback)
-	go p.pipe(p.rconn, p.lconn, nil)
+	go p.pipe(&p.lconn, &p.rconn, powerCallback)
+	go p.pipe(&p.rconn, &p.lconn, nil)
 	//wait for close...
 	<-p.errsig
 }
