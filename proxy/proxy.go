@@ -112,7 +112,6 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			}
 			b := buff[:n]
 			r = append(readBuf{}, buff[:n]...)
-			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 			if remainingBytes > 0 && remainingBytes <= 0xffff {
 				newPacket = true
 				msg = msg + string(r.next(remainingBytes))
@@ -125,6 +124,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					remainingBytes = remainingBytes - 0xffff
 				}
 			}
+			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 		NewP:
 			if newPacket {
 				remainingBytes = 0
@@ -135,6 +135,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				case query:
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.int32()
+					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					if remainingBytes <= 0xffff {
 						newPacket = true
 						msg = msg + string(r.next(remainingBytes))
@@ -146,6 +147,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 						msg = msg + string(r.next(remainingBytes))
 						remainingBytes = remainingBytes - 0xffff
 					}
+					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 				// case rowDescription:
 				// case dataRow:
 				// case bindComplete:
