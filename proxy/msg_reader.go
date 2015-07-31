@@ -35,12 +35,13 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	if r.msgBytesRemaining > 0 {
 		io.CopyN(ioutil.Discard, r.reader, int64(r.msgBytesRemaining))
 	}
-	fmt.Println("1")
 	b := r.buf[0:5]
-	fmt.Println("2")
-	_, err = io.ReadAtLeast(r.reader, b, len(b))
+	fmt.Println("1")
+	a, err := io.ReadAtLeast(r.reader, b, len(b))
 	// ReadFull(r.reader, b)
+	fmt.Printf("a: %#v\n", a)
 	fmt.Println(err)
+	fmt.Println("2")
 	if r.err != nil {
 		fmt.Println(err)
 	}
