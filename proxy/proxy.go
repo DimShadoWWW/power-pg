@@ -113,7 +113,7 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 			var r *msgReader
 			t, r, err := c.rxMsg()
 			if err != nil {
-				fmt.Println("c")
+				fmt.Println(err)
 				return
 			}
 
