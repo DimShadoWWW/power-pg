@@ -37,9 +37,9 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	}
 	b := r.buf[0:5]
 	fmt.Println("1")
+	min := len(b)
 	fmt.Println(len(b))
 	fmt.Println("2")
-	min := len(b)
 	var n int
 	for n < min && err == nil {
 		var nn int
