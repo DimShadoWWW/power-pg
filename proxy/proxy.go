@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -23,8 +22,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 	listener := getListener(localAddr)
 
 	for {
-		conn, err := listener.Accept()
-		// .AcceptTCP()
+		conn, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Printf("Failed to accept connection '%s'\n", err)
 			continue
@@ -32,7 +30,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 		connid++
 
 		p := &proxy{
-			lconn:  Conn{conn: conn, alive: true},
+			lconn:  *conn,
 			laddr:  localAddr,
 			raddr:  remoteAddr,
 			erred:  false,
@@ -61,7 +59,7 @@ type proxy struct {
 	sentBytes     uint64
 	receivedBytes uint64
 	laddr, raddr  *net.TCPAddr
-	lconn, rconn  Conn
+	lconn, rconn  net.TCPConn
 	erred         bool
 	errsig        chan bool
 	prefix        string
@@ -86,56 +84,95 @@ func (p *proxy) start(powerCallback common.Callback) {
 		p.err("Remote connection failed: %s", err)
 		return
 	}
-	p.rconn.conn = rconn
-	p.rconn.alive = true
+	p.rconn = *rconn
+	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(&p.lconn, &p.rconn, powerCallback)
-	go p.pipe(&p.rconn, &p.lconn, nil)
+	go p.pipe(p.lconn, p.rconn, powerCallback)
+	go p.pipe(p.rconn, p.lconn, nil)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst *Conn, powerCallback common.Callback) {
+func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	//data direction
-	islocal := src.conn == p.lconn.conn
+	islocal := src == p.lconn
 	//directional copy (64k buffer)
-	buff := make([]byte, 0xffff)
-	var softErr error
+	buff := make(readBuf, 0xffff)
+	newPacket := true
+	var msg string
+	var remainingBytes int
+	var r readBuf
 	if islocal {
 		for {
-
-			fmt.Println("a")
-			c := src
-			c.reader = bufio.NewReader(src.conn)
-			c.mr.reader = c.reader
-
-			var t byte
-			var r *msgReader
-			fmt.Println("b")
-			t, r, err := c.rxMsg()
-			fmt.Println("c")
+			n, err := src.Read(buff)
 			if err != nil {
-				fmt.Println(err)
+				p.err("Read failed '%s'\n", err)
 				return
 			}
-			fmt.Println("d")
-
-			fmt.Printf("t: %#v\n", t)
-			switch t {
-			case readyForQuery:
-				c.rxReadyForQuery(r)
-				return
-			// case rowDescription:
-			// case dataRow:
-			// case bindComplete:
-			// case commandComplete:
-			// 	commandTag = CommandTag(r.readCString())
-			default:
-				if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
-					softErr = e
+			b := buff[:n]
+			if remainingBytes <= 0xffff {
+				newPacket = true
+				msg = msg + string(buff.next(remainingBytes))
+				remainingBytes = 0xffff - remainingBytes
+				fmt.Println(msg)
+			} else {
+				newPacket = false
+				msg = msg + string(buff.next(remainingBytes))
+				remainingBytes = remainingBytes - 0xffff
+			}
+		NewP:
+			if newPacket {
+				r = append(readBuf{})
+				remainingBytes = 0
+				newPacket = false
+				msg = ""
+				t := r.byte()
+				switch t {
+				case readyForQuery:
+					// c.rxReadyForQuery(r)
+					remainingBytes = r.int32()
+					if remainingBytes <= 0xffff {
+						newPacket = true
+						msg = msg + string(buff.next(remainingBytes))
+						remainingBytes = 0xffff - remainingBytes
+						fmt.Println(msg)
+						goto NewP
+					} else {
+						newPacket = false
+						msg = msg + string(buff.next(remainingBytes))
+						remainingBytes = remainingBytes - 0xffff
+					}
+				// case rowDescription:
+				// case dataRow:
+				// case bindComplete:
+				// case commandComplete:
+				// 	commandTag = CommandTag(r.readCString())
+				default:
+					// if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
+					// 	softErr = e
+					// }
 				}
 			}
+			r = append(r, buff[:]...)
+
+			// fmt.Println("a")
+			// c := src
+			// c.reader = bufio.NewReader(src.conn)
+			// c.mr.reader = c.reader
+			//
+			// var t byte
+			// var r *msgReader
+			// fmt.Println("b")
+			// t, r, err := c.rxMsg()
+			// fmt.Println("c")
+			// if err != nil {
+			// 	fmt.Println(err)
+			// 	return
+			// }
+			// fmt.Println("d")
+			//
+			// fmt.Printf("t: %#v\n", t)
 
 			// n, err := src.Read(buff)
 			// if err != nil {
@@ -149,23 +186,23 @@ func (p *proxy) pipe(src, dst *Conn, powerCallback common.Callback) {
 			// b = getModifiedBuffer(b, powerCallback)
 			// n, err = dst.Write(b)
 			//
-			// //write out result
-			// n, err = dst.Write(b)
-			// if err != nil {
-			// 	p.err("Write failed '%s'\n", err)
-			// 	return
-			// }
+			//write out result
+			n, err = dst.Write(b)
+			if err != nil {
+				p.err("Write failed '%s'\n", err)
+				return
+			}
 		}
 	} else {
 		for {
-			n, err := src.conn.Read(buff)
+			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
 			b := buff[:n]
 			//write out result
-			n, err = dst.conn.Write(b)
+			n, err = dst.Write(b)
 			if err != nil {
 				p.err("Write failed '%s'\n", err)
 				return
