@@ -32,7 +32,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 		connid++
 
 		p := &proxy{
-			lconn:  Conn{conn: conn},
+			lconn:  Conn{conn: conn, alive: true},
 			laddr:  localAddr,
 			raddr:  remoteAddr,
 			erred:  false,
@@ -87,6 +87,7 @@ func (p *proxy) start(powerCallback common.Callback) {
 		return
 	}
 	p.rconn.conn = rconn
+	p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
 	go p.pipe(&p.lconn, &p.rconn, powerCallback)
