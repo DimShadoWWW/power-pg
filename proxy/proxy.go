@@ -114,16 +114,16 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			b := buff[:n]
 			r = buff[:n]
 			fmt.Printf("%#v\n", buff[:n])
-			if remainingBytes > 0 && remainingBytes <= 0xffff {
-				newPacket = true
-				msg = msg + string(r.next(remainingBytes))
-				remainingBytes = 0xffff - remainingBytes
-				fmt.Println(msg)
-			} else {
-				if remainingBytes > 0 {
+			if remainingBytes > 0 {
+				if remainingBytes <= n {
+					newPacket = true
+					msg = msg + string(r.next(remainingBytes))
+					remainingBytes = n - remainingBytes
+					fmt.Println(msg)
+				} else {
 					newPacket = false
 					msg = msg + string(r.next(remainingBytes))
-					remainingBytes = remainingBytes - 0xffff
+					remainingBytes = remainingBytes - n
 				}
 			}
 			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
@@ -133,23 +133,27 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				newPacket = false
 				msg = ""
 				t := r.byte()
+				n = n - 1
 				fmt.Println(t)
 				switch t {
 				case query:
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.int32()
-					if remainingBytes <= 0xffff {
-						newPacket = true
-						msg = msg + string(r.next(remainingBytes))
-						remainingBytes = 0xffff - remainingBytes
-						fmt.Println(msg)
-						goto NewP
-					} else {
-						newPacket = false
-						msg = msg + string(r.next(remainingBytes))
-						remainingBytes = remainingBytes - 0xffff
+					remainingBytes = remainingBytes - 4
+					if remainingBytes > 0 {
+						if remainingBytes <= n {
+							newPacket = true
+							msg = msg + string(r.next(remainingBytes))
+							remainingBytes = n - remainingBytes
+							fmt.Println(msg)
+							goto NewP
+						} else {
+							newPacket = false
+							msg = msg + string(r.next(remainingBytes))
+							remainingBytes = remainingBytes - n
+						}
+						fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					}
-					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 				// case rowDescription:
 				// case dataRow:
 				// case bindComplete:
