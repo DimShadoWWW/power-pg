@@ -111,19 +111,19 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				return
 			}
 			b := buff[:n]
+			r = append(readBuf{}, buff[:n]...)
 			if remainingBytes <= 0xffff {
 				newPacket = true
-				msg = msg + string(buff.next(remainingBytes))
+				msg = msg + string(r.next(remainingBytes))
 				remainingBytes = 0xffff - remainingBytes
 				fmt.Println(msg)
 			} else {
 				newPacket = false
-				msg = msg + string(buff.next(remainingBytes))
+				msg = msg + string(r.next(remainingBytes))
 				remainingBytes = remainingBytes - 0xffff
 			}
 		NewP:
 			if newPacket {
-				r = append(readBuf{})
 				remainingBytes = 0
 				newPacket = false
 				msg = ""
@@ -134,13 +134,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					remainingBytes = r.int32()
 					if remainingBytes <= 0xffff {
 						newPacket = true
-						msg = msg + string(buff.next(remainingBytes))
+						msg = msg + string(r.next(remainingBytes))
 						remainingBytes = 0xffff - remainingBytes
 						fmt.Println(msg)
 						goto NewP
 					} else {
 						newPacket = false
-						msg = msg + string(buff.next(remainingBytes))
+						msg = msg + string(r.next(remainingBytes))
 						remainingBytes = remainingBytes - 0xffff
 					}
 				// case rowDescription:
