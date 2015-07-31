@@ -37,9 +37,21 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	}
 	b := r.buf[0:5]
 	fmt.Println("1")
-	a, err := io.ReadAtLeast(r.reader, b, len(b))
+	min := len(b)
+	var n int
+	for n < min && err == nil {
+		var nn int
+		nn, err = r.reader.Read(b[n:])
+		n += nn
+	}
+	if n >= min {
+		err = nil
+	} else if n > 0 && err == io.EOF {
+		err = io.ErrUnexpectedEOF
+	}
+	// a, err := io.ReadAtLeast(r.reader, b, len(b))
 	// ReadFull(r.reader, b)
-	fmt.Printf("a: %#v\n", a)
+	fmt.Printf("a: %#v\n", n)
 	fmt.Println(err)
 	fmt.Println("2")
 	if r.err != nil {
