@@ -121,6 +121,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 
 			r = buff[:n]
 			// fmt.Printf("%#v", string(buff[:n]))
+			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 			if remainingBytes > 0 {
 				if remainingBytes <= n {
 					newPacket = true
@@ -133,7 +134,6 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					remainingBytes = remainingBytes - n
 				}
 			}
-			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 		NewP:
 			if newPacket {
 				remainingBytes = 0
