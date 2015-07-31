@@ -104,6 +104,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	remainingBytes := 0
 	if islocal {
 		for {
+			if remainingBytes == 0 {
+				newPacket = true
+			}
 			var r readBuf
 			n, err := src.Read(buff)
 			if err != nil {
