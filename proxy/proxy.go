@@ -101,7 +101,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	buff := make(readBuf, 0xffff)
 	newPacket := true
 	var msg string
-	var remainingBytes int
+	remainingBytes := 0
 	var r readBuf
 	if islocal {
 		for {
@@ -112,15 +112,18 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			}
 			b := buff[:n]
 			r = append(readBuf{}, buff[:n]...)
+			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 			if remainingBytes > 0 && remainingBytes <= 0xffff {
 				newPacket = true
 				msg = msg + string(r.next(remainingBytes))
 				remainingBytes = 0xffff - remainingBytes
 				fmt.Println(msg)
 			} else {
-				newPacket = false
-				msg = msg + string(r.next(remainingBytes))
-				remainingBytes = remainingBytes - 0xffff
+				if remainingBytes > 0 {
+					newPacket = false
+					msg = msg + string(r.next(remainingBytes))
+					remainingBytes = remainingBytes - 0xffff
+				}
 			}
 		NewP:
 			if newPacket {
@@ -132,7 +135,6 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				case query:
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.int32()
-					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					if remainingBytes <= 0xffff {
 						newPacket = true
 						msg = msg + string(r.next(remainingBytes))
