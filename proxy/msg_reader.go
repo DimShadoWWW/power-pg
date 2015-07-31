@@ -38,8 +38,8 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	fmt.Println("1")
 	b := r.buf[0:5]
 	fmt.Println("2")
-	a, err := io.ReadFull(r.reader, b)
-	fmt.Println(a)
+	_, err = io.ReadFull(r.reader, b)
+	fmt.Println(err)
 	if r.err != nil {
 		fmt.Println(err)
 	}
