@@ -130,7 +130,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					fmt.Println("1")
 					newPacket = true
 					msg = msg + string(r.next(remainingBytes))
+					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					remainingBytes = n - remainingBytes
+					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					// fmt.Println("msg: ", string(msg))
 				} else {
 					fmt.Println("2")
