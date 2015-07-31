@@ -112,6 +112,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			}
 			fmt.Printf("Readed bytes: %d\n", n)
 			b := buff[:n]
+			//write out result
+			n, err = dst.Write(b)
+			if err != nil {
+				p.err("Write failed '%s'\n", err)
+				return
+			}
+
 			r = buff[:n]
 			fmt.Printf("%#v\n", buff[:n])
 			if remainingBytes > 0 {
@@ -196,13 +203,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			//
 			// b = getModifiedBuffer(b, powerCallback)
 			// n, err = dst.Write(b)
-			//
-			//write out result
-			n, err = dst.Write(b)
-			if err != nil {
-				p.err("Write failed '%s'\n", err)
-				return
-			}
+			// //
+			// //write out result
+			// n, err = dst.Write(b)
+			// if err != nil {
+			// 	p.err("Write failed '%s'\n", err)
+			// 	return
+			// }
 		}
 	} else {
 		for {
