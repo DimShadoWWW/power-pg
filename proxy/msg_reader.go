@@ -38,14 +38,14 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	b := r.buf[0:5]
 	fmt.Println("1")
 	min := len(b)
-	fmt.Println(len(b))
-	fmt.Println("2")
 	var n int
+	fmt.Println(len(b))
 	for n < min && err == nil {
 		var nn int
+		fmt.Println("2")
 		nn, err = r.reader.Read(b[n:])
-		n += nn
 		fmt.Println("3")
+		n += nn
 	}
 	fmt.Println("4")
 	if n >= min {
