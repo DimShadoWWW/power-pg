@@ -113,7 +113,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			fmt.Printf("Readed bytes: %d\n", n)
 			b := buff[:n]
 			r = buff[:n]
-			fmt.Printf("%#v\n", r.byte())
+			fmt.Printf("%#v\n", buff[:n])
 			if remainingBytes > 0 && remainingBytes <= 0xffff {
 				newPacket = true
 				msg = msg + string(r.next(remainingBytes))
