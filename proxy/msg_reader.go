@@ -37,13 +37,17 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	}
 	b := r.buf[0:5]
 	fmt.Println("1")
+	fmt.Println(len(b))
+	fmt.Println("2")
 	min := len(b)
 	var n int
 	for n < min && err == nil {
 		var nn int
 		nn, err = r.reader.Read(b[n:])
 		n += nn
+		fmt.Println("3")
 	}
+	fmt.Println("4")
 	if n >= min {
 		err = nil
 	} else if n > 0 && err == io.EOF {
@@ -53,13 +57,10 @@ func (r *msgReader) rxMsg() (t byte, err error) {
 	// ReadFull(r.reader, b)
 	fmt.Printf("a: %#v\n", n)
 	fmt.Println(err)
-	fmt.Println("2")
 	if r.err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("3")
 	r.msgBytesRemaining = int32(binary.BigEndian.Uint32(b[1:])) - 4
-	fmt.Println("4")
 	return b[0], err
 }
 
