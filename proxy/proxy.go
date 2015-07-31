@@ -142,14 +142,14 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			fmt.Println("3")
 		NewP:
 			fmt.Println("4")
-			if newPacket {
+			if newPacket && len(r) > 0 {
 				fmt.Println("5")
 				remainingBytes = 0
 				newPacket = false
 				msg = ""
 				t := r.byte()
 				n = n - 1
-				fmt.Println("t: ", t)
+				fmt.Println("t: ", string(t))
 				switch t {
 				case query:
 					// c.rxReadyForQuery(r)
