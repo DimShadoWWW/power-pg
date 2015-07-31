@@ -119,6 +119,7 @@ func (p *proxy) pipe(src, dst *Conn, powerCallback common.Callback) {
 				fmt.Println("c")
 				return
 			}
+			fmt.Println("d")
 
 			fmt.Printf("t: %#v\n", t)
 			switch t {
