@@ -129,9 +129,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				msg = ""
 				t := r.byte()
 				switch t {
-				case readyForQuery:
+				case query:
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.int32()
+					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					if remainingBytes <= 0xffff {
 						newPacket = true
 						msg = msg + string(r.next(remainingBytes))

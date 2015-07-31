@@ -31,6 +31,7 @@ const (
 	noData               = 'n'
 	closeComplete        = '3'
 	flush                = 'H'
+	query                = 'Q'
 )
 
 type startupMessage struct {
