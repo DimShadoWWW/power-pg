@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 )
@@ -28,17 +29,19 @@ func (r *msgReader) fatal(err error) {
 
 // rxMsg reads the type and size of the next message.
 func (r *msgReader) rxMsg() (t byte, err error) {
+	fmt.Println("1")
 	if r.err != nil {
 		return 0, err
 	}
-
+	fmt.Println("2")
 	if r.msgBytesRemaining > 0 {
 		io.CopyN(ioutil.Discard, r.reader, int64(r.msgBytesRemaining))
 	}
-
+	fmt.Println("3")
 	b := r.buf[0:5]
 	_, err = io.ReadFull(r.reader, b)
 	r.msgBytesRemaining = int32(binary.BigEndian.Uint32(b[1:])) - 4
+	fmt.Println("4")
 	return b[0], err
 }
 

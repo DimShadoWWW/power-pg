@@ -110,13 +110,13 @@ func (p *proxy) pipe(src, dst *Conn, powerCallback common.Callback) {
 			c.reader = bufio.NewReader(src.conn)
 			c.mr.reader = c.reader
 
-			fmt.Println("b")
 			var t byte
 			var r *msgReader
+			fmt.Println("b")
 			t, r, err := c.rxMsg()
+			fmt.Println("c")
 			if err != nil {
 				fmt.Println(err)
-				fmt.Println("c")
 				return
 			}
 			fmt.Println("d")
