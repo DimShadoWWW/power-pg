@@ -23,7 +23,8 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 	listener := getListener(localAddr)
 
 	for {
-		conn, err := listener.AcceptTCP()
+		conn, err := listener.Accept()
+		// .AcceptTCP()
 		if err != nil {
 			fmt.Printf("Failed to accept connection '%s'\n", err)
 			continue
@@ -31,7 +32,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 		connid++
 
 		p := &proxy{
-			lconn:  conn,
+			lconn:  Conn{conn: conn},
 			laddr:  localAddr,
 			raddr:  remoteAddr,
 			erred:  false,
@@ -60,7 +61,7 @@ type proxy struct {
 	sentBytes     uint64
 	receivedBytes uint64
 	laddr, raddr  *net.TCPAddr
-	lconn, rconn  *net.TCPConn
+	lconn, rconn  Conn
 	erred         bool
 	errsig        chan bool
 	prefix        string
@@ -78,15 +79,15 @@ func (p *proxy) err(s string, err error) {
 }
 
 func (p *proxy) start(powerCallback common.Callback) {
-	defer p.lconn.Close()
+	defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
 	if err != nil {
 		p.err("Remote connection failed: %s", err)
 		return
 	}
-	p.rconn = rconn
-	defer p.rconn.Close()
+	p.rconn.conn = rconn
+	defer p.rconn.conn.Close()
 	//bidirectional copy
 	go p.pipe(p.lconn, p.rconn, powerCallback)
 	go p.pipe(p.rconn, p.lconn, nil)
@@ -94,9 +95,9 @@ func (p *proxy) start(powerCallback common.Callback) {
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
+func (p *proxy) pipe(src, dst Conn, powerCallback common.Callback) {
 	//data direction
-	islocal := src == p.lconn
+	islocal := src.conn == p.lconn.conn
 	//directional copy (64k buffer)
 	buff := make([]byte, 0xffff)
 	var softErr error
@@ -104,8 +105,8 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 		for {
 
 			fmt.Println("a")
-			c := new(Conn)
-			c.reader = bufio.NewReader(src)
+			c := src
+			c.reader = bufio.NewReader(src.conn)
 			c.mr.reader = c.reader
 
 			fmt.Println("b")
@@ -113,7 +114,7 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 			var r *msgReader
 			t, r, err := c.rxMsg()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("c")
 				return
 			}
 
@@ -154,14 +155,14 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 		}
 	} else {
 		for {
-			n, err := src.Read(buff)
+			n, err := src.conn.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
 			b := buff[:n]
 			//write out result
-			n, err = dst.Write(b)
+			n, err = dst.conn.Write(b)
 			if err != nil {
 				p.err("Write failed '%s'\n", err)
 				return
