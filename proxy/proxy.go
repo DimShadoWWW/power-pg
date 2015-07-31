@@ -99,12 +99,12 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
 	buff := make(readBuf, 0xffff)
-	newPacket := true
-	var msg string
-	remainingBytes := 0
+	// newPacket := true
+	// var msg string
+	// remainingBytes := 0
 	if islocal {
 		for {
-			var r readBuf
+			// var r readBuf
 			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
@@ -119,60 +119,60 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				return
 			}
 
-			r = buff[:n]
-			fmt.Printf("%#v\n", buff[:n])
-			if remainingBytes > 0 {
-				if remainingBytes <= n {
-					newPacket = true
-					msg = msg + string(r.next(remainingBytes))
-					remainingBytes = n - remainingBytes
-					fmt.Println(msg)
-				} else {
-					newPacket = false
-					msg = msg + string(r.next(remainingBytes))
-					remainingBytes = remainingBytes - n
-				}
-			}
-			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-		NewP:
-			if newPacket {
-				remainingBytes = 0
-				newPacket = false
-				msg = ""
-				t := r.byte()
-				n = n - 1
-				fmt.Println(t)
-				switch t {
-				case query:
-					// c.rxReadyForQuery(r)
-					remainingBytes = r.int32()
-					remainingBytes = remainingBytes - 4
-					if remainingBytes > 0 {
-						if remainingBytes <= n {
-							newPacket = true
-							msg = msg + string(r.next(remainingBytes))
-							remainingBytes = n - remainingBytes
-							fmt.Println(msg)
-							goto NewP
-						} else {
-							newPacket = false
-							msg = msg + string(r.next(remainingBytes))
-							remainingBytes = remainingBytes - n
-						}
-						fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-					}
-				// case rowDescription:
-				// case dataRow:
-				// case bindComplete:
-				// case commandComplete:
-				// 	commandTag = CommandTag(r.readCString())
-				default:
-					// if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
-					// 	softErr = e
-					// }
-				}
-			}
-			r = append(r, buff[:]...)
+			// 	r = buff[:n]
+			// 	fmt.Printf("%#v\n", buff[:n])
+			// 	if remainingBytes > 0 {
+			// 		if remainingBytes <= n {
+			// 			newPacket = true
+			// 			msg = msg + string(r.next(remainingBytes))
+			// 			remainingBytes = n - remainingBytes
+			// 			fmt.Println(msg)
+			// 		} else {
+			// 			newPacket = false
+			// 			msg = msg + string(r.next(remainingBytes))
+			// 			remainingBytes = remainingBytes - n
+			// 		}
+			// 	}
+			// 	fmt.Printf("Remaining bytes: %d\n", remainingBytes)
+			// NewP:
+			// 	if newPacket {
+			// 		remainingBytes = 0
+			// 		newPacket = false
+			// 		msg = ""
+			// 		t := r.byte()
+			// 		n = n - 1
+			// 		fmt.Println(t)
+			// 		switch t {
+			// 		case query:
+			// 			// c.rxReadyForQuery(r)
+			// 			remainingBytes = r.int32()
+			// 			remainingBytes = remainingBytes - 4
+			// 			if remainingBytes > 0 {
+			// 				if remainingBytes <= n {
+			// 					newPacket = true
+			// 					msg = msg + string(r.next(remainingBytes))
+			// 					remainingBytes = n - remainingBytes
+			// 					fmt.Println(msg)
+			// 					goto NewP
+			// 				} else {
+			// 					newPacket = false
+			// 					msg = msg + string(r.next(remainingBytes))
+			// 					remainingBytes = remainingBytes - n
+			// 				}
+			// 				fmt.Printf("Remaining bytes: %d\n", remainingBytes)
+			// 			}
+			// 		// case rowDescription:
+			// 		// case dataRow:
+			// 		// case bindComplete:
+			// 		// case commandComplete:
+			// 		// 	commandTag = CommandTag(r.readCString())
+			// 		default:
+			// 			// if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
+			// 			// 	softErr = e
+			// 			// }
+			// 		}
+			// 	}
+			// 	r = append(r, buff[:]...)
 
 			// fmt.Println("a")
 			// c := src
