@@ -131,13 +131,15 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					newPacket = true
 					msg = msg + string(r.next(remainingBytes))
 					remainingBytes = n - remainingBytes
-					fmt.Println("msg: ", string(msg))
+					// fmt.Println("msg: ", string(msg))
 				} else {
 					fmt.Println("2")
 					newPacket = false
 					msg = msg + string(r.next(remainingBytes))
 					remainingBytes = remainingBytes - n
 				}
+
+				fmt.Printf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 			}
 			fmt.Println("3")
 		NewP:
@@ -146,7 +148,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				fmt.Println("5")
 				remainingBytes = 0
 				newPacket = false
-				fmt.Println("msg 0 : ", string(msg))
+				fmt.Printf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				msg = ""
 				t := r.byte()
 				n = n - 1
@@ -161,15 +163,15 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 							newPacket = true
 							msg = msg + string(r.next(remainingBytes))
 							remainingBytes = n - remainingBytes
-							fmt.Println("msg: ", string(msg))
+							fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							// fmt.Println(msg)
 							goto NewP
 						} else {
 							newPacket = false
 							msg = msg + string(r.next(remainingBytes))
 							remainingBytes = remainingBytes - n
+							fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 						}
-						fmt.Printf("Remaining bytes: %d\n", remainingBytes)
 					}
 				// case rowDescription:
 				// case dataRow:
