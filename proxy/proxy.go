@@ -120,13 +120,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			}
 
 			r = buff[:n]
-			fmt.Printf("%#v\n", buff[:n])
+			// fmt.Printf("%#v", string(buff[:n]))
 			if remainingBytes > 0 {
 				if remainingBytes <= n {
 					newPacket = true
 					msg = msg + string(r.next(remainingBytes))
 					remainingBytes = n - remainingBytes
-					fmt.Println(msg)
+					fmt.Println("msg: ", string(msg))
 				} else {
 					newPacket = false
 					msg = msg + string(r.next(remainingBytes))
@@ -172,7 +172,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					// }
 				}
 			}
-			r = append(r, buff[:]...)
+			// r = append(r, buff[:]...)
 
 			// fmt.Println("a")
 			// c := src
