@@ -102,7 +102,6 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 	var softErr error
 	if islocal {
 		for {
-			fmt.Println("aaa")
 			c := new(Conn)
 			c.reader = bufio.NewReader(src)
 			c.mr.reader = c.reader
@@ -114,6 +113,7 @@ func (p *proxy) pipe(src, dst *net.TCPConn, powerCallback common.Callback) {
 				return
 			}
 
+			fmt.Printf("%#v\n", t)
 			switch t {
 			case readyForQuery:
 				c.rxReadyForQuery(r)
