@@ -148,7 +148,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			fmt.Println("4")
 			if newPacket && len(r) > 4 && remainingBytes == 0 {
 				fmt.Println("5")
-				remainingBytes = 0
+				// remainingBytes = 0
 				newPacket = false
 				fmt.Printf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				msg = ""
@@ -156,25 +156,49 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				n = n - 1
 				fmt.Println("t: ", string(t))
 				switch t {
-				case query:
+				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.int32()
-					remainingBytes = remainingBytes - 4
-					if remainingBytes > 0 {
-						if remainingBytes <= n {
-							newPacket = true
-							msg = msg + string(r.next(remainingBytes))
-							remainingBytes = n - remainingBytes
-							fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-							// fmt.Println(msg)
-							goto NewP
-						} else {
-							newPacket = false
-							msg = msg + string(r.next(remainingBytes))
-							remainingBytes = remainingBytes - n
-							fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					if remainingBytes < 4 {
+						fmt.Errorf("ERROR: remainingBytes can't be less than 4 bytes if int32")
+					} else {
+						remainingBytes = remainingBytes - 4
+						if remainingBytes > 0 {
+							if remainingBytes <= n {
+								newPacket = true
+								msg = msg + string(r.next(remainingBytes))
+								remainingBytes = n - remainingBytes
+								fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								// fmt.Println(msg)
+								goto NewP
+							} else {
+								newPacket = false
+								msg = msg + string(r.next(remainingBytes))
+								remainingBytes = remainingBytes - n
+								fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+							}
 						}
 					}
+				// case :
+				// 	fmt.Println("TODO")
+				// 	// c.rxReadyForQuery(r)
+				// 	remainingBytes = r.int32()
+				// 	remainingBytes = remainingBytes - 4
+				// 	if remainingBytes > 0 {
+				// 		if remainingBytes <= n {
+				// 			newPacket = true
+				// 			msg = msg + string(r.next(remainingBytes))
+				// 			remainingBytes = n - remainingBytes
+				// 			fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				// 			// fmt.Println(msg)
+				// 			goto NewP
+				// 		} else {
+				// 			newPacket = false
+				// 			msg = msg + string(r.next(remainingBytes))
+				// 			remainingBytes = remainingBytes - n
+				// 			fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				// 		}
+				// 	}
 				// case rowDescription:
 				// case dataRow:
 				// case bindComplete:
