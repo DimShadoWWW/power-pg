@@ -125,28 +125,28 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			r = buff[:n]
 			// fmt.Printf("%#v", string(buff[:n]))
 			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-			if remainingBytes > 0 {
-				if remainingBytes <= n {
-					fmt.Println("1")
-					newPacket = true
-					msg = msg + string(r.next(remainingBytes))
-					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-					remainingBytes = n - remainingBytes
-					fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-					// fmt.Println("msg: ", string(msg))
-				} else {
-					fmt.Println("2")
-					newPacket = false
-					msg = msg + string(r.next(remainingBytes))
-					remainingBytes = remainingBytes - n
-				}
-
-				fmt.Printf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-			}
+			// if remainingBytes > 0 {
+			// 	if remainingBytes <= n {
+			// 		fmt.Println("1")
+			// 		newPacket = true
+			// 		msg = msg + string(r.next(remainingBytes))
+			// 		fmt.Printf("2 Remaining bytes: %d\n", remainingBytes)
+			// 		remainingBytes = n - remainingBytes
+			// 		fmt.Printf("3 Remaining bytes: %d\n", remainingBytes)
+			// 		// fmt.Println("msg: ", string(msg))
+			// 	} else {
+			// 		fmt.Println("2")
+			// 		newPacket = false
+			// 		msg = msg + string(r.next(remainingBytes))
+			// 		remainingBytes = remainingBytes - n
+			// 	}
+			//
+			// 	fmt.Printf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+			// }
 			fmt.Println("3")
 		NewP:
 			fmt.Println("4")
-			if newPacket && len(r) > 0 {
+			if newPacket && len(r) > 4 && remainingBytes == 0 {
 				fmt.Println("5")
 				remainingBytes = 0
 				newPacket = false
