@@ -219,6 +219,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 					// 	softErr = e
 					// }
 				}
+			} else {
+				fmt.Println("7")
+				remainingBytes = 0
 			}
 			// r = append(r, buff[:]...)
 
