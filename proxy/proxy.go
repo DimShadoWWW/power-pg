@@ -151,7 +151,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 				// remainingBytes = 0
 				newPacket = false
 				fmt.Printf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-				msg = ""
+				var msg []byte
 				t := r.byte()
 				n = n - 1
 				fmt.Println("t: ", string(t))
@@ -166,14 +166,15 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 						if remainingBytes > 0 {
 							if remainingBytes <= n {
 								newPacket = true
-								msg = msg + string(r.next(remainingBytes))
+								msg = append(msg, r.next(remainingBytes)[:]...)
 								remainingBytes = n - remainingBytes
 								fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 								// fmt.Println(msg)
 								goto NewP
 							} else {
 								newPacket = false
-								msg = msg + string(r.next(remainingBytes))
+								msg = append(msg, r.next(remainingBytes)[:]...)
 								remainingBytes = remainingBytes - n
 								fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							}
