@@ -125,6 +125,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 			r = buff[:n]
 			// fmt.Printf("%#v", string(buff[:n]))
 			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
+			fmt.Printf("newPacket : %v\n", newPacket)
+			fmt.Printf("len(r) : %v\n", len(r))
 			// if remainingBytes > 0 {
 			// 	if remainingBytes <= n {
 			// 		fmt.Println("1")
@@ -172,9 +174,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 								// fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 								fmt.Printf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
 								for _, v := range msg {
-									fmt.Printf("'%v': '%s'\t", v, string(v))
+									fmt.Printf("'%v': '%s'  ", v, string(v))
 								}
 								fmt.Println(msg)
+								fmt.Println(string(msg))
 								goto NewP
 							} else {
 								newPacket = false
