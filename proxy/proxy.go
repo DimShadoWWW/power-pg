@@ -187,32 +187,34 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 							}
 						}
 					}
-				// case :
-				// 	fmt.Println("TODO")
-				// 	// c.rxReadyForQuery(r)
-				// 	remainingBytes = r.int32()
-				// 	remainingBytes = remainingBytes - 4
-				// 	if remainingBytes > 0 {
-				// 		if remainingBytes <= n {
-				// 			newPacket = true
-				// 			msg = msg + string(r.next(remainingBytes))
-				// 			remainingBytes = n - remainingBytes
-				// 			fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-				// 			// fmt.Println(msg)
-				// 			goto NewP
-				// 		} else {
-				// 			newPacket = false
-				// 			msg = msg + string(r.next(remainingBytes))
-				// 			remainingBytes = remainingBytes - n
-				// 			fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-				// 		}
-				// 	}
-				// case rowDescription:
-				// case dataRow:
-				// case bindComplete:
-				// case commandComplete:
-				// 	commandTag = CommandTag(r.readCString())
+					// case :
+					// 	fmt.Println("TODO")
+					// 	// c.rxReadyForQuery(r)
+					// 	remainingBytes = r.int32()
+					// 	remainingBytes = remainingBytes - 4
+					// 	if remainingBytes > 0 {
+					// 		if remainingBytes <= n {
+					// 			newPacket = true
+					// 			msg = msg + string(r.next(remainingBytes))
+					// 			remainingBytes = n - remainingBytes
+					// 			fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					// 			// fmt.Println(msg)
+					// 			goto NewP
+					// 		} else {
+					// 			newPacket = false
+					// 			msg = msg + string(r.next(remainingBytes))
+					// 			remainingBytes = remainingBytes - n
+					// 			fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					// 		}
+					// 	}
+					// case rowDescription:
+					// case dataRow:
+					// case bindComplete:
+					// case commandComplete:
+					// 	commandTag = CommandTag(r.readCString())
 				default:
+					fmt.Println("6")
+					remainingBytes = 0
 					// if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
 					// 	softErr = e
 					// }
