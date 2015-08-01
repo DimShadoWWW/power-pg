@@ -168,9 +168,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 								newPacket = true
 								msg = append(msg, r.next(remainingBytes)[:]...)
 								remainingBytes = n - remainingBytes
-								fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-								fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
-								// fmt.Println(msg)
+								// fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								// fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+								fmt.Printf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
+								for _, v := range msg {
+									fmt.Printf("'%v': '%s'\t", v, string(v))
+								}
+								fmt.Println(msg)
 								goto NewP
 							} else {
 								newPacket = false
