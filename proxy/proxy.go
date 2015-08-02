@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/DimShadoWWW/power-pg/common"
 )
@@ -169,6 +170,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 							if remainingBytes <= n {
 								newPacket = true
 								msg = append(msg, r.next(remainingBytes)[:]...)
+								msg = []byte(stripchars(string(msg),
+									"\n\t"))
+								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
+								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
 								// fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 								// fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
@@ -182,6 +187,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 							} else {
 								newPacket = false
 								msg = append(msg, r.next(remainingBytes)[:]...)
+								// msg = bytes.Replace(msg, []byte("\n\t"), []byte(" "), -1)
+								msg = []byte(stripchars(string(msg),
+									"\n\t"))
 								remainingBytes = remainingBytes - n
 								fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							}
@@ -311,4 +319,13 @@ func check(err error) {
 
 func warn(f string, args ...interface{}) {
 	fmt.Printf(f+"\n", args...)
+}
+
+func stripchars(str, chr string) string {
+	return strings.Map(func(r rune) rune {
+		if strings.IndexRune(chr, r) < 0 {
+			return r
+		}
+		return -1
+	}, str)
 }
