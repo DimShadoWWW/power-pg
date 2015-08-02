@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/DimShadoWWW/power-pg/common"
@@ -103,6 +104,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 	newPacket := true
 	var msg string
 	remainingBytes := 0
+	spaces := regexp.MustCompile("[\n\t ]+")
 	if islocal {
 		for {
 			if remainingBytes == 0 {
@@ -170,8 +172,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 							if remainingBytes <= n {
 								newPacket = true
 								msg = append(msg, r.next(remainingBytes)[:]...)
-								msg = []byte(stripchars(string(msg),
-									"\n\t"))
+								msg = spaces.ReplaceAll(msg, []byte{' '})
+								// msg = []byte(stripchars(string(msg),
+								// 	"\n\t"))
 								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
 								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
@@ -188,8 +191,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 								newPacket = false
 								msg = append(msg, r.next(remainingBytes)[:]...)
 								// msg = bytes.Replace(msg, []byte("\n\t"), []byte(" "), -1)
-								msg = []byte(stripchars(string(msg),
-									"\n\t"))
+								msg = spaces.ReplaceAll(msg, []byte{' '})
+								// msg = []byte(stripchars(string(msg),
+								// 	"\n\t"))
 								remainingBytes = remainingBytes - n
 								fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							}
