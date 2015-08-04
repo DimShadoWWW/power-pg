@@ -45,7 +45,7 @@ func main() {
 		temp := ""
 		for msg := range msgCh {
 			if msg.Type == 'P' && strings.Contains(string(msg.Content), "$1") {
-				temp = string(msg.Content[29 : len(msg.Content)-4])
+				temp = string(msg.Content[:len(msg.Content)-4])
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 {
 					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
