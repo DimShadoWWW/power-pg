@@ -64,9 +64,12 @@ func main() {
 					if selectIdx == -1 {
 						selectIdx = 0
 					}
-					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 0, 1, 0, 0}))
 					if sepIdx == -1 {
-						sepIdx = len(msg.Content) - 4
+						sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+						if sepIdx == -1 {
+							sepIdx = len(msg.Content) - 4
+						}
 					}
 					messages = append(messages, string(msg.Content[selectIdx:sepIdx]))
 				}
