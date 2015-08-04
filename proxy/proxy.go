@@ -17,7 +17,7 @@ var (
 )
 
 // Start function
-func Start(localHost, remoteHost *string, powerCallback common.Callback) {
+func Start(localHost, remoteHost *string, powerCallback common.Callback, msgCh chan string) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
 	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost)
@@ -39,7 +39,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback) {
 			errsig: make(chan bool),
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
 		}
-		go p.start(powerCallback)
+		go p.start(powerCallback, msgCh)
 	}
 }
 
@@ -65,6 +65,7 @@ type proxy struct {
 	erred         bool
 	errsig        chan bool
 	prefix        string
+	result        *[]string
 }
 
 func (p *proxy) err(s string, err error) {
@@ -78,7 +79,7 @@ func (p *proxy) err(s string, err error) {
 	p.erred = true
 }
 
-func (p *proxy) start(powerCallback common.Callback) {
+func (p *proxy) start(powerCallback common.Callback, msgCh chan string) {
 	// defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -90,13 +91,13 @@ func (p *proxy) start(powerCallback common.Callback) {
 	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, powerCallback)
+	go p.pipe(p.lconn, p.rconn, msgCh)
 	go p.pipe(p.rconn, p.lconn, nil)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
+func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
@@ -184,6 +185,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, powerCallback common.Callback) {
 								for _, v := range msg {
 									fmt.Printf("'%v': '%s'  ", v, string(v))
 								}
+								if msgCh != nil {
+									msgCh <- string(msg)
+								}
+								// p.result = append(p.result, string(msg))
 								fmt.Println(msg)
 								fmt.Println(string(msg))
 								goto NewP

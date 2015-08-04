@@ -15,11 +15,12 @@ var (
 	localHost     = flag.String("l", ":9876", "Endereço e porta do listener local")
 	remoteHost    = flag.String("r", "localhost:5432", "Endereço e porta do servidor PostgreSQL")
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
-	// urls       = []string
+	messages      = []string{}
 )
 
 func main() {
 	flag.Parse()
+	msgCh := make(chan string)
 	if *remoteService != "" {
 		go func() {
 			time.Sleep(time.Second * 3)
@@ -32,7 +33,11 @@ func main() {
 		}()
 	}
 
-	proxy.Start(localHost, remoteHost, getQueryModificada)
+	go proxy.Start(localHost, remoteHost, getQueryModificada, msgCh)
+
+	for msg := range msgCh {
+		fmt.Println(msg)
+	}
 }
 
 func getQueryModificada(queryOriginal string) string {
