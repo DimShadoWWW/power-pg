@@ -141,7 +141,7 @@ func main() {
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
 							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-							varLen := newMsg.Int32()
+							varLen := int(newMsg.Byte())
 							fmt.Printf("varLen ----->%v\n", varLen)
 							fmt.Printf("newMsg   ----->%#v\n", newMsg)
 							vars[i] = string(newMsg.Next(varLen))
