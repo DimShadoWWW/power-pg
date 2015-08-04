@@ -137,7 +137,7 @@ func main() {
 						fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
 						totalVar := newMsg.Int32()
 
-						var vars map[int]string
+						vars := make(map[int]string)
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
 							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
