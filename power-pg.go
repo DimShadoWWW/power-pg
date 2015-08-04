@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -24,12 +25,24 @@ func main() {
 	flag.Parse()
 	msgs := make(chan string)
 	msgCh := make(chan proxy.Pkg)
+	msgOut := make(chan string)
 	if *remoteService != "" {
 		go func() {
 			time.Sleep(time.Second * 3)
-			_, _, errs := gorequest.New().Get(*remoteService).End()
-			if errs != nil {
-				log.Fatalf("log failed: %v", errs)
+			inFile, _ := os.Open("canales_list.txt")
+			defer inFile.Close()
+			scanner := bufio.NewScanner(inFile)
+			scanner.Split(bufio.ScanLines)
+
+			for scanner.Scan() {
+				time.Sleep(time.Second * 1)
+				messages = []string{}
+				fmt.Println(scanner.Text())
+				msgOut <- scanner.Text()
+				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
+				if errs != nil {
+					log.Fatalf("log failed: %v", errs)
+				}
 			}
 			log.Println("done")
 			os.Exit(0)
@@ -78,6 +91,9 @@ func main() {
 					if sepIdx == -1 {
 						sepIdx = len(msg.Content)
 					}
+					if selectIdx == -1 {
+						selectIdx = 0
+					}
 					fmt.Printf("SEP index ----->%v\n", sepIdx)
 					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
@@ -91,6 +107,9 @@ func main() {
 			}
 			fmt.Printf("---------->%v\n", messages)
 			fmt.Printf("---------->%#v\n", messages)
+			for _, v := range messages {
+				msgOut <- fmt.Sprintf("==> %s", v)
+			}
 		}
 	}()
 
