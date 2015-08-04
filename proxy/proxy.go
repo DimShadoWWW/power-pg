@@ -201,10 +201,14 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
 								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
-								// if msgCh != nil {
-								// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
-								// if msgCh != nil {
-								// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)}
+
+								if msgs != nil {
+									msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								}
+								if msgs != nil {
+									msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+								}
+
 								if msgCh != nil {
 									msgCh <- Pkg{
 										Type:    t,
