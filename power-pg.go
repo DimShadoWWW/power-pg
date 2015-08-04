@@ -56,6 +56,18 @@ func main() {
 	}()
 
 	go func() {
+		f, err := os.OpenFile("report.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		for msg := range msgOut {
+			fmt.Println(msg)
+			f.WriteString(msg)
+		}
+	}()
+
+	go func() {
 		temp := ""
 		for msg := range msgCh {
 			if msg.Type == 'P' {
