@@ -65,7 +65,7 @@ func main() {
 						selectIdx = 0
 					}
 					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 0, 1, 0, 0}))
-					if sepIdx == -1 {
+					if sepIdx == -1 || sepIdx+5 > len(msg.Content) {
 						sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
 						if sepIdx == -1 {
 							sepIdx = len(msg.Content) - 4
