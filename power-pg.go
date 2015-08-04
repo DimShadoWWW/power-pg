@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
@@ -134,17 +133,17 @@ func main() {
 						var newMsg proxy.ReadBuf
 						// B type allways ends with 0100
 						fmt.Printf("msg.Content   ----->%#v\n", msg.Content)
-						newMsg = msg.Content[idxPdo+20 : len(msg.Content)-4]
+						newMsg = msg.Content[idxPdo+22 : len(msg.Content)-4]
 						fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
-						totalVar := newMsg.Int32()
+						totalVar := newMsg.Int16()
 
 						vars := make(map[int]string)
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
 							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-							aa := newMsg.Next(4)
-							fmt.Printf("aa   ----->%#v\n", aa)
-							varLen := int(binary.BigEndian.Uint32(aa))
+							varLen := newMsg.Int32()
+							fmt.Println("aa   -----> ", string(varLen))
+							// varLen := int(binary.BigEndian.Uint32(aa))
 							fmt.Printf("varLen ----->%v\n", varLen)
 							fmt.Printf("newMsg   ----->%#v\n", newMsg)
 							vars[i] = string(newMsg.Next(varLen))
