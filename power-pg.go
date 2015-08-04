@@ -75,6 +75,9 @@ func main() {
 							sepIdx = len(msg.Content) - 1
 						}
 					}
+					fmt.Printf("SEP index ----->%v\n", sepIdx)
+					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
+					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
 					messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
 				}
 			} else {
