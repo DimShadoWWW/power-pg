@@ -71,8 +71,14 @@ func main() {
 						sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
 						if sepIdx == -1 || sepIdx+4 > len(msg.Content) {
 							sepIdx = len(msg.Content) - 4
+							if sepIdx == -1 {
+								sepIdx = len(msg.Content)
+							}
 						} else {
 							sepIdx = len(msg.Content) - 1
+							if sepIdx == -1 {
+								sepIdx = len(msg.Content)
+							}
 						}
 					}
 					fmt.Printf("SEP index ----->%v\n", sepIdx)
