@@ -132,15 +132,15 @@ func main() {
 					if idxPdo != -1 {
 						var newMsg proxy.ReadBuf
 						// B type allways ends with 0100
-						fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
+						fmt.Printf("msg.Content   ----->%#v\n", msg.Content)
 						newMsg = msg.Content[idxPdo+20 : len(msg.Content)-4]
-						fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
+						fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
 						totalVar := newMsg.Int32()
 
 						var vars map[int]string
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
-							fmt.Printf("3 newMsg   ----->%#v\n", newMsg)
+							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
 							varLen := newMsg.Int32()
 							fmt.Printf("varLen ----->%v\n", varLen)
 							fmt.Printf("newMsg   ----->%#v\n", newMsg)
