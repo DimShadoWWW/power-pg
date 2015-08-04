@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -128,39 +127,76 @@ func main() {
 				}
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
-					idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
+					var newMsg proxy.ReadBuf
+					newMsg = msg.Content
 
-					if idxPdo != -1 {
-						var newMsg proxy.ReadBuf
-						// B type allways ends with 0100
-						fmt.Printf("msg.Content   ----->%#v\n", msg.Content)
-						newMsg = msg.Content[idxPdo+22 : len(msg.Content)-4]
-						fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
-						totalVar := newMsg.Int16()
+					// The name of the destination portal (an empty string selects the unnamed portal).
+					p := bytes.Index(newMsg, []byte{0})
+					// remove first string
+					newMsg = newMsg[p+1:]
 
-						vars := make(map[int]string)
-						var varsIdx []int
-						for i := 0; i < totalVar; i++ {
-							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-							// varLen := newMsg.Int32()
-							aa := newMsg.Next(4)
-							fmt.Printf("aa   -----> %#v\n", aa)
-							fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
-							varLen := int(binary.BigEndian.Uint32(aa))
-							fmt.Printf("varLen ----->%v\n", varLen)
-							fmt.Printf("newMsg   ----->%#v\n", newMsg)
-							vars[i] = string(newMsg.Next(varLen))
-							fmt.Printf("vars   ----->%#v\n", vars)
-							varsIdx = append(varsIdx, i)
-							fmt.Printf("varIdx  ----->%#v\n", varsIdx)
-						}
-						sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
-						for _, k := range varsIdx {
-							messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
-						}
-					} else {
-						messages = append(messages, string(msg.Content[29:len(msg.Content)-4]))
+					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
+					p = bytes.Index(newMsg, []byte{0})
+					// remove second string
+					newMsg = newMsg[p+1:]
+
+					t := newMsg.Int16()
+					for i := 0; i < t; i++ {
+						t = newMsg.Int16()
 					}
+
+					totalVar := newMsg.Int16()
+					vars := make(map[int]string)
+					var varsIdx []int
+					for i := 0; i < totalVar; i++ {
+						fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
+						// varLen := newMsg.Int32()
+						aa := newMsg.Next(4)
+						fmt.Printf("aa   -----> %#v\n", aa)
+						fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
+						varLen := int(binary.BigEndian.Uint32(aa))
+						fmt.Printf("varLen ----->%v\n", varLen)
+						fmt.Printf("newMsg   ----->%#v\n", newMsg)
+						vars[i] = string(newMsg.Next(varLen))
+						fmt.Printf("vars   ----->%#v\n", vars)
+						varsIdx = append(varsIdx, i)
+						fmt.Printf("varIdx  ----->%#v\n", varsIdx)
+					}
+					// fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
+
+					// idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
+					//
+					// if idxPdo != -1 {
+					// 	var newMsg proxy.ReadBuf
+					// 	// B type allways ends with 0100
+					// 	fmt.Printf("msg.Content   ----->%#v\n", msg.Content)
+					// 	newMsg = msg.Content[idxPdo+22 : len(msg.Content)-4]
+					// 	fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
+					// 	totalVar := newMsg.Int16()
+					//
+					// 	vars := make(map[int]string)
+					// 	var varsIdx []int
+					// 	for i := 0; i < totalVar; i++ {
+					// 		fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
+					// 		// varLen := newMsg.Int32()
+					// 		aa := newMsg.Next(4)
+					// 		fmt.Printf("aa   -----> %#v\n", aa)
+					// 		fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
+					// 		varLen := int(binary.BigEndian.Uint32(aa))
+					// 		fmt.Printf("varLen ----->%v\n", varLen)
+					// 		fmt.Printf("newMsg   ----->%#v\n", newMsg)
+					// 		vars[i] = string(newMsg.Next(varLen))
+					// 		fmt.Printf("vars   ----->%#v\n", vars)
+					// 		varsIdx = append(varsIdx, i)
+					// 		fmt.Printf("varIdx  ----->%#v\n", varsIdx)
+					// 	}
+					// 	sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
+					// 	for _, k := range varsIdx {
+					// 		messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
+					// 	}
+					// } else {
+					// 	messages = append(messages, string(msg.Content[29:len(msg.Content)-4]))
+					// }
 
 				}
 				temp = ""
