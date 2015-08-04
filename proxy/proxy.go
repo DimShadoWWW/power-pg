@@ -117,7 +117,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
-			fmt.Printf("Readed bytes: %d\n", n)
+			if msgCh != nil {
+				msgCh <- fmt.Sprintf("Readed bytes: %d\n", n)
+			}
 			b := buff[:n]
 			//write out result
 			n, err = dst.Write(b)
@@ -127,18 +129,27 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 			}
 
 			r = buff[:n]
-			// fmt.Printf("%#v", string(buff[:n]))
-			fmt.Printf("Remaining bytes: %d\n", remainingBytes)
-			fmt.Printf("newPacket : %v\n", newPacket)
-			fmt.Printf("len(r) : %v\n", len(r))
+			// if msgCh != nil {
+			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
+			if msgCh != nil {
+				msgCh <- fmt.Sprintf("Remaining bytes: %d\n", remainingBytes)
+			}
+			if msgCh != nil {
+				msgCh <- fmt.Sprintf("newPacket : %v\n", newPacket)
+			}
+			if msgCh != nil {
+				msgCh <- fmt.Sprintf("len(r) : %v\n", len(r))
+			}
 			// if remainingBytes > 0 {
 			// 	if remainingBytes <= n {
 			// 		fmt.Println("1")
 			// 		newPacket = true
 			// 		msg = msg + string(r.next(remainingBytes))
-			// 		fmt.Printf("2 Remaining bytes: %d\n", remainingBytes)
+			// if msgCh != nil {
+			// 				msgCh <- 	fmt.Sprintf("2 Remaining bytes: %d\n", remainingBytes)}
 			// 		remainingBytes = n - remainingBytes
-			// 		fmt.Printf("3 Remaining bytes: %d\n", remainingBytes)
+			// if msgCh != nil {
+			// 				msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d\n", remainingBytes)}
 			// 		// fmt.Println("msg: ", string(msg))
 			// 	} else {
 			// 		fmt.Println("2")
@@ -147,7 +158,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 			// 		remainingBytes = remainingBytes - n
 			// 	}
 			//
-			// 	fmt.Printf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+			// 	if msgCh != nil {
+			// msgCh <- 	fmt.Sprintf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
 			// }
 			fmt.Println("3")
 		NewP:
@@ -156,7 +168,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 				fmt.Println("5")
 				// remainingBytes = 0
 				newPacket = false
-				fmt.Printf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				if msgCh != nil {
+					msgCh <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				}
 				var msg []byte
 				t := r.byte()
 				n = n - 1
@@ -179,15 +193,21 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
 								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
-								// fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-								// fmt.Printf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
-								fmt.Printf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
-								for _, v := range msg {
-									fmt.Printf("'%v': '%s'  ", v, string(v))
-								}
+								// if msgCh != nil {
+								// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
+								// if msgCh != nil {
+								// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)}
 								if msgCh != nil {
-									msgCh <- string(msg)
+									msgCh <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
 								}
+								for _, v := range msg {
+									if msgCh != nil {
+										msgCh <- fmt.Sprintf("'%v': '%s'  ", v, string(v))
+									}
+								}
+								// if msgCh != nil {
+								// 	msgCh <- string(msg)
+								// }
 								// p.result = append(p.result, string(msg))
 								fmt.Println(msg)
 								fmt.Println(string(msg))
@@ -200,7 +220,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 								// msg = []byte(stripchars(string(msg),
 								// 	"\n\t"))
 								remainingBytes = remainingBytes - n
-								fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								if msgCh != nil {
+									msgCh <- fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								}
 							}
 						}
 					}
@@ -214,14 +236,16 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 					// 			newPacket = true
 					// 			msg = msg + string(r.next(remainingBytes))
 					// 			remainingBytes = n - remainingBytes
-					// 			fmt.Printf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					// 			if msgCh != nil {
+					// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
 					// 			// fmt.Println(msg)
 					// 			goto NewP
 					// 		} else {
 					// 			newPacket = false
 					// 			msg = msg + string(r.next(remainingBytes))
 					// 			remainingBytes = remainingBytes - n
-					// 			fmt.Printf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					// 			if msgCh != nil {
+					// msgCh <- 	fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
 					// 		}
 					// 	}
 					// case rowDescription:
@@ -258,7 +282,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 			// }
 			// fmt.Println("d")
 			//
-			// fmt.Printf("t: %#v\n", t)
+			// if msgCh != nil {
+			// msgCh <- 	fmt.Sprintf("t: %#v\n", t)}
 
 			// n, err := src.Read(buff)
 			// if err != nil {
