@@ -44,19 +44,32 @@ func main() {
 	go func() {
 		temp := ""
 		for msg := range msgCh {
-			if msg.Type == 'P' && strings.Contains(string(msg.Content), "$1") {
-				selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
-				if selectIdx == -1 {
-					selectIdx = 0
+			if msg.Type == 'P' {
+				if strings.Contains(string(msg.Content), "$1") {
+					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
+					if selectIdx == -1 {
+						selectIdx = 0
+					}
+					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					if sepIdx == -1 {
+						sepIdx = len(msg.Content) - 4
+					}
+					temp = string(msg.Content[selectIdx:sepIdx])
+					fmt.Printf("SEP index ----->%v\n", sepIdx)
+					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
+					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
+				} else {
+					temp = ""
+					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
+					if selectIdx == -1 {
+						selectIdx = 0
+					}
+					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					if sepIdx == -1 {
+						sepIdx = len(msg.Content) - 4
+					}
+					messages = append(messages, string(msg.Content[selectIdx:sepIdx]))
 				}
-				sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
-				if sepIdx == -1 {
-					sepIdx = len(msg.Content) - 4
-				}
-				temp = string(msg.Content[selectIdx:sepIdx])
-				fmt.Printf("SEP index ----->%v\n", sepIdx)
-				fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
-				fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
 					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
