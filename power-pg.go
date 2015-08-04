@@ -145,7 +145,7 @@ func main() {
 							// varLen := newMsg.Int32()
 							aa := newMsg.Next(4)
 							fmt.Printf("aa   -----> %#v\n", aa)
-							fmt.Printf("aa bits ----->%32b\n", aa)
+							fmt.Printf("aa bits ----->%8b\n", aa[len(aa)])
 							varLen := int(binary.LittleEndian.Uint32(aa))
 							fmt.Printf("varLen ----->%v\n", varLen)
 							fmt.Printf("newMsg   ----->%#v\n", newMsg)
