@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
@@ -141,7 +142,7 @@ func main() {
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
 							fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-							varLen := int(newMsg.Byte())
+							varLen := int(binary.BigEndian.Uint32(newMsg.Next(4)))
 							fmt.Printf("varLen ----->%v\n", varLen)
 							fmt.Printf("newMsg   ----->%#v\n", newMsg)
 							vars[i] = string(newMsg.Next(varLen))
