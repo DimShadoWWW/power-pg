@@ -50,8 +50,17 @@ func main() {
 	}
 
 	go func() {
+		f, err := os.OpenFile("/all.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
 		for msg := range msgs {
-			fmt.Println(msg)
+			// fmt.Println(msg)
+			_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			}
 		}
 	}()
 
