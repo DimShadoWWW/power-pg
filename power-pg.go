@@ -33,11 +33,13 @@ func main() {
 		}()
 	}
 
-	go proxy.Start(localHost, remoteHost, getQueryModificada, msgCh)
+	go func() {
+		for msg := range msgCh {
+			fmt.Println("---------->", mmsg)
+		}
+	}()
 
-	for msg := range msgCh {
-		fmt.Println(msg)
-	}
+	proxy.Start(localHost, remoteHost, getQueryModificada, msgCh)
 }
 
 func getQueryModificada(queryOriginal string) string {
