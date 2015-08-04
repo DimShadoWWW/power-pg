@@ -48,6 +48,8 @@ func main() {
 				sep := []byte{0, 1, 0, 0}
 				i := strings.Index(string(msg.Content), string(sep))
 				temp = string(msg.Content[i : len(msg.Content)-4])
+				fmt.Printf("SEP index ----->%v\n", i)
+				fmt.Printf("SEP CONT------->%v\n", msg.Content)
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
 					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
