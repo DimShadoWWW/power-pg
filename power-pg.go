@@ -139,8 +139,13 @@ func main() {
 						var varsIdx []int
 						for i := 0; i < totalVar; i++ {
 							varLen := newMsg.Int32()
+
+							fmt.Printf("varLen ----->%v\n", varLen)
+							fmt.Printf("newMsg   ----->%#v\n", newMsg)
 							vars[i] = string(newMsg.Next(varLen))
+							fmt.Printf("vars   ----->%#v\n", vars)
 							varsIdx = append(varsIdx, i)
+							fmt.Printf("varIdx  ----->%#v\n", varsIdx)
 						}
 						sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
 						for _, k := range varsIdx {
