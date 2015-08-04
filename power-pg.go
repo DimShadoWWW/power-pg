@@ -49,12 +49,13 @@ func main() {
 				i := strings.Index(string(msg.Content), string(sep))
 				temp = string(msg.Content[i : len(msg.Content)-4])
 			} else {
-				if msg.Type == 'B' && len(msg.Content) > 28 {
+				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
 					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
 				}
 				temp = ""
 			}
 			fmt.Printf("---------->%v\n", messages)
+			fmt.Printf("---------->%#v\n", messages)
 		}
 	}()
 
