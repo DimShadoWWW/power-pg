@@ -38,7 +38,7 @@ func main() {
 				time.Sleep(time.Second * 1)
 				messages = []string{}
 				fmt.Println(scanner.Text())
-				msgOut <- scanner.Text()
+				msgOut <- fmt.Sprintf("# %s", scanner.Text())
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 				if errs != nil {
 					log.Fatalf("log failed: %v", errs)
@@ -56,7 +56,7 @@ func main() {
 	}()
 
 	go func() {
-		f, err := os.OpenFile("report.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		f, err := os.OpenFile("report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		if err != nil {
 			panic(err)
 		}
@@ -119,8 +119,8 @@ func main() {
 			}
 			fmt.Printf("---------->%v\n", messages)
 			fmt.Printf("---------->%#v\n", messages)
-			for _, v := range messages {
-				msgOut <- fmt.Sprintf("==> %s", v)
+			for k, v := range messages {
+				msgOut <- fmt.Sprintf("%d. %s", k+1, v)
 			}
 		}
 	}()
