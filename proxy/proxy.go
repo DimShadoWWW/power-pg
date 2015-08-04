@@ -16,8 +16,14 @@ var (
 	connid = uint64(0)
 )
 
+// Pkg PostgreSQL package structure
+type Pkg struct {
+	Type    byte
+	Content []byte
+}
+
 // Start function
-func Start(localHost, remoteHost *string, powerCallback common.Callback, msgCh chan string) {
+func Start(localHost, remoteHost *string, powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
 	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost)
@@ -39,7 +45,7 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback, msgCh c
 			errsig: make(chan bool),
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
 		}
-		go p.start(powerCallback, msgCh)
+		go p.start(powerCallback, msgs, msgCh)
 	}
 }
 
@@ -79,7 +85,7 @@ func (p *proxy) err(s string, err error) {
 	p.erred = true
 }
 
-func (p *proxy) start(powerCallback common.Callback, msgCh chan string) {
+func (p *proxy) start(powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
 	// defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -91,13 +97,13 @@ func (p *proxy) start(powerCallback common.Callback, msgCh chan string) {
 	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, msgCh)
-	go p.pipe(p.rconn, p.lconn, nil)
+	go p.pipe(p.lconn, p.rconn, msgs, msgCh)
+	go p.pipe(p.rconn, p.lconn, nil, nil)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
+func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
@@ -117,8 +123,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
-			if msgCh != nil {
-				msgCh <- fmt.Sprintf("Readed bytes: %d\n", n)
+			if msgs != nil {
+				msgs <- fmt.Sprintf("Readed bytes: %d\n", n)
 			}
 			b := buff[:n]
 			//write out result
@@ -131,14 +137,14 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 			r = buff[:n]
 			// if msgCh != nil {
 			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
-			if msgCh != nil {
-				msgCh <- fmt.Sprintf("Remaining bytes: %d\n", remainingBytes)
+			if msgs != nil {
+				msgs <- fmt.Sprintf("Remaining bytes: %d\n", remainingBytes)
 			}
-			if msgCh != nil {
-				msgCh <- fmt.Sprintf("newPacket : %v\n", newPacket)
+			if msgs != nil {
+				msgs <- fmt.Sprintf("newPacket : %v\n", newPacket)
 			}
-			if msgCh != nil {
-				msgCh <- fmt.Sprintf("len(r) : %v\n", len(r))
+			if msgs != nil {
+				msgs <- fmt.Sprintf("len(r) : %v\n", len(r))
 			}
 			// if remainingBytes > 0 {
 			// 	if remainingBytes <= n {
@@ -168,8 +174,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 				fmt.Println("5")
 				// remainingBytes = 0
 				newPacket = false
-				if msgCh != nil {
-					msgCh <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				if msgs != nil {
+					msgs <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
 				t := r.byte()
@@ -198,7 +204,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 								// if msgCh != nil {
 								// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)}
 								if msgCh != nil {
-									msgCh <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
+									msgCh <- Pkg{
+										Type:    t,
+										Content: msg,
+									}
 								}
 								// for _, v := range msg {
 								// 	if msgCh != nil {
@@ -220,8 +229,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 								// msg = []byte(stripchars(string(msg),
 								// 	"\n\t"))
 								remainingBytes = remainingBytes - n
-								if msgCh != nil {
-									msgCh <- fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								if msgs != nil {
+									msgs <- fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 								}
 							}
 						}

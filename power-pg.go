@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
@@ -20,7 +21,8 @@ var (
 
 func main() {
 	flag.Parse()
-	msgCh := make(chan string)
+	msgs := make(chan string)
+	msgCh := make(chan proxy.Pkg)
 	if *remoteService != "" {
 		go func() {
 			time.Sleep(time.Second * 3)
@@ -34,12 +36,27 @@ func main() {
 	}
 
 	go func() {
-		for msg := range msgCh {
-			fmt.Println("---------->", msg)
+		for msg := range msgs {
+			fmt.Println(msg)
 		}
 	}()
 
-	proxy.Start(localHost, remoteHost, getQueryModificada, msgCh)
+	go func() {
+		temp := ""
+		for msg := range msgCh {
+			if msg.Type == 'P' && strings.Contains(string(msg.Content), "$1") {
+				temp = string(msg.Content)
+			} else {
+				if msg.Type == 'B' && len(msg.Content) > 28 {
+					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
+				}
+				temp = ""
+			}
+			fmt.Printf("---------->%v\n", messages)
+		}
+	}()
+
+	proxy.Start(localHost, remoteHost, getQueryModificada, msgs, msgCh)
 }
 
 func getQueryModificada(queryOriginal string) string {
