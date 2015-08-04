@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -54,7 +55,8 @@ func main() {
 					if sepIdx == -1 {
 						sepIdx = len(msg.Content) - 4
 					}
-					temp = string(msg.Content[selectIdx:sepIdx])
+
+					temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
 					fmt.Printf("SEP index ----->%v\n", sepIdx)
 					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
@@ -73,7 +75,7 @@ func main() {
 							sepIdx = len(msg.Content) - 1
 						}
 					}
-					messages = append(messages, string(msg.Content[selectIdx:sepIdx]))
+					messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
 				}
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {

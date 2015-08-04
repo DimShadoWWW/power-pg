@@ -194,6 +194,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								newPacket = true
 								msg = append(msg, r.next(remainingBytes)[:]...)
 								msg = spaces.ReplaceAll(msg, []byte{' '})
+								// msg = bytes.Trim(msg, "\x00")
+								// msg = bytes.Trim(msg, "\x01")
 								// msg = []byte(stripchars(string(msg),
 								// 	"\n\t"))
 								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
