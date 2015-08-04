@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -118,6 +119,7 @@ func main() {
 					if selectIdx == -1 {
 						selectIdx = 0
 					}
+
 					fmt.Printf("SEP index ----->%v\n", sepIdx)
 					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
@@ -125,7 +127,29 @@ func main() {
 				}
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
-					messages = append(messages, strings.Replace(temp, "$1", fmt.Sprintf("'%s'", string(msg.Content[29:len(msg.Content)-4])), -1))
+					idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
+
+					if idxPdo != -1 {
+						var newMsg proxy.ReadBuf
+						// B type allways ends with 0100
+						newMsg = msg.Content[idxPdo+20 : len(msg.Content)-4]
+						totalVar := newMsg.Int32()
+
+						var vars map[int]string
+						var varsIdx []int
+						for i := 0; i < totalVar; i++ {
+							varLen := newMsg.Int32()
+							vars[i] = string(newMsg.Next(varLen))
+							varsIdx = append(varsIdx, i)
+						}
+						sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
+						for _, k := range varsIdx {
+							messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
+						}
+					} else {
+						messages = append(messages, string(msg.Content[29:len(msg.Content)-4]))
+					}
+
 				}
 				temp = ""
 			}

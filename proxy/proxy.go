@@ -107,7 +107,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
-	buff := make(readBuf, 0xffff)
+	buff := make(ReadBuf, 0xffff)
 	newPacket := true
 	var msg string
 	remainingBytes := 0
@@ -117,7 +117,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 			if remainingBytes == 0 {
 				newPacket = true
 			}
-			var r readBuf
+			var r ReadBuf
 			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
@@ -178,13 +178,13 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 					msgs <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
-				t := r.byte()
+				t := r.Byte()
 				n = n - 1
 				fmt.Println("t: ", string(t))
 				switch t {
 				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
 					// c.rxReadyForQuery(r)
-					remainingBytes = r.int32()
+					remainingBytes = r.Int32()
 					if remainingBytes < 4 {
 						fmt.Errorf("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
@@ -192,7 +192,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 						if remainingBytes > 0 {
 							if remainingBytes <= n {
 								newPacket = true
-								msg = append(msg, r.next(remainingBytes)[:]...)
+								msg = append(msg, r.Next(remainingBytes)[:]...)
 								msg = spaces.ReplaceAll(msg, []byte{' '})
 								// msg = bytes.Trim(msg, "\x00")
 								// msg = bytes.Trim(msg, "\x01")
@@ -202,7 +202,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
 
-								if msgs != nil {
+								if msgCh != nil {
 									msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 								}
 								if msgs != nil {
@@ -229,7 +229,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								goto NewP
 							} else {
 								newPacket = false
-								msg = append(msg, r.next(remainingBytes)[:]...)
+								msg = append(msg, r.Next(remainingBytes)[:]...)
 								// msg = bytes.Replace(msg, []byte("\n\t"), []byte(" "), -1)
 								msg = spaces.ReplaceAll(msg, []byte{' '})
 								// msg = []byte(stripchars(string(msg),
