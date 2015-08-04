@@ -162,6 +162,9 @@ func main() {
 						// varLen := int(binary.BigEndian.Uint32(aa))
 						fmt.Printf("varLen ----->%v\n", varLen)
 						fmt.Printf("newMsg   ----->%#v\n", newMsg)
+						if varLen > len(newMsg) {
+							varLen = len(newMsg) - 4
+						}
 						vars[i] = string(newMsg.Next(varLen))
 						fmt.Printf("vars   ----->%#v\n", vars)
 						varsIdx = append(varsIdx, i)
