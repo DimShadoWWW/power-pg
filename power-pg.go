@@ -134,16 +134,20 @@ func main() {
 					// remove first string
 					fmt.Printf("first string ends ----->%#v\n", p)
 					newMsg = newMsg[p+1:]
+					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
 					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
 					fmt.Printf("second string ends ---->%#v\n", p)
 					newMsg = newMsg[p+1:]
+					fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
 
 					t := newMsg.Int16()
+					fmt.Printf("vars types numbers ---->%#v\n", t)
 					for i := 0; i < t; i++ {
 						t = newMsg.Int16()
+						fmt.Printf("22 newMsg   ----->%#v\n", newMsg)
 					}
 
 					totalVar := newMsg.Int16()
