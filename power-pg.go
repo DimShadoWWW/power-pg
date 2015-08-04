@@ -35,7 +35,7 @@ func main() {
 
 	go func() {
 		for msg := range msgCh {
-			fmt.Println("---------->", mmsg)
+			fmt.Println("---------->", msg)
 		}
 	}()
 
