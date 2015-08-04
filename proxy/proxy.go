@@ -200,11 +200,11 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgCh chan string) {
 								if msgCh != nil {
 									msgCh <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: ", remainingBytes)
 								}
-								for _, v := range msg {
-									if msgCh != nil {
-										msgCh <- fmt.Sprintf("'%v': '%s'  ", v, string(v))
-									}
-								}
+								// for _, v := range msg {
+								// 	if msgCh != nil {
+								// 		msgCh <- fmt.Sprintf("'%v': '%s'  ", v, string(v))
+								// 	}
+								// }
 								// if msgCh != nil {
 								// 	msgCh <- string(msg)
 								// }
