@@ -132,11 +132,13 @@ func main() {
 					// The name of the destination portal (an empty string selects the unnamed portal).
 					p := bytes.Index(newMsg, []byte{0})
 					// remove first string
+					fmt.Printf("first string ends ----->%#v\n", p)
 					newMsg = newMsg[p+1:]
 
 					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
+					fmt.Printf("second string ends ---->%#v\n", p)
 					newMsg = newMsg[p+1:]
 
 					t := newMsg.Int16()
