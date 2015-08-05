@@ -22,12 +22,16 @@ var (
 	// messages      = []string{}
 )
 
+type msgStruct struct {
+	Type    string
+	Content string
+}
+
 func main() {
 	flag.Parse()
 	msgs := make(chan string)
 	msgCh := make(chan proxy.Pkg)
-	msgOut1 := make(chan string)
-	msgOut2 := make(chan string)
+	msgOut := make(chan msgStruct)
 	if *remoteService != "" {
 		go func() {
 			time.Sleep(time.Second * 3)
@@ -40,8 +44,8 @@ func main() {
 				time.Sleep(time.Second * 1)
 				// messages = []string{}
 				// fmt.Println(scanner.Text())
-				// msgOut1 <- fmt.Sprintf("# %s\n", scanner.Text())
-				msgOut1 <- scanner.Text()
+				// msgOut <- fmt.Sprintf("# %s\n", scanner.Text())
+				msgOut <- msgStruct{Type: "C", Content: scanner.Text()}
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 				if errs != nil {
 					log.Fatalf("log failed: %v", errs)
@@ -71,21 +75,24 @@ func main() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		for {
 			c := 0
-			select {
-			case msg1 := <-msgOut1:
+			// select {
+			// case msg1 := <-msgOut:
+			msg := <-msgOut
+			if msg.Type == "C" {
 				f.Close()
-				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg1), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 				c = 0
 				if err != nil {
 					panic(err)
 				}
-				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg1))
+				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
-			case msg2 := <-msgOut2:
+			} else {
+				// case msg2 := <-msgOut:
 				c = c + 1
-				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg2))
+				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
@@ -152,7 +159,7 @@ func main() {
 					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
 					// messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
-					msgOut2 <- string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
+					msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 				}
 			} else {
 				if msg.Type == 'B' && temp != "" {
@@ -209,7 +216,7 @@ func main() {
 						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1)
 					}
 					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
-					msgOut2 <- temp
+					msgOut <- msgStruct{Type: "M", Content: temp}
 					// fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
 
 					// idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
@@ -252,7 +259,7 @@ func main() {
 			// fmt.Printf("---------->%v\n", messages)
 			// fmt.Printf("---------->%#v\n", messages)
 			// for k, v := range messages {
-			// 	msgOut2 <- v
+			// 	msgOut <- v
 			// }
 		}
 	}()
