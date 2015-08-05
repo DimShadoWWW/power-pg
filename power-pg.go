@@ -36,8 +36,8 @@ func main() {
 
 			for scanner.Scan() {
 				time.Sleep(time.Second * 1)
-				messages = []string{}
-				fmt.Println(scanner.Text())
+				// messages = []string{}
+				// fmt.Println(scanner.Text())
 				msgOut <- fmt.Sprintf("# %s\n", scanner.Text())
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 				if errs != nil {
@@ -218,6 +218,7 @@ func main() {
 			for k, v := range messages {
 				msgOut <- fmt.Sprintf("%d. %s\n", k+1, v)
 			}
+			messages = []string{}
 		}
 	}()
 
