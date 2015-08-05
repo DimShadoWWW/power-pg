@@ -128,7 +128,9 @@ func main() {
 					p := bytes.Index(newMsg, []byte{0})
 					// remove first string
 					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
+					msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
 					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
+					msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+1]))
 					newMsg = newMsg[p+1:]
 					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
@@ -136,6 +138,7 @@ func main() {
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
 					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p+1])
+					msgs <- fmt.Sprintf("second string: message ---->%s\n", string(newMsg[:p+1]))
 					temp = string(newMsg[:p+1])
 
 					// fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
