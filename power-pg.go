@@ -80,19 +80,19 @@ func main() {
 			msg := <-msgOut
 			if msg.Type == "C" {
 				f.Close()
-				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 				c = 0
 				if err != nil {
 					panic(err)
 				}
-				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg))
+				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
 			} else {
 				// case msg2 := <-msgOut:
 				c = c + 1
-				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg))
+				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg.Content))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
@@ -214,6 +214,10 @@ func main() {
 					for _, k := range varsIdx {
 						// messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
 						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1)
+						msgs <- fmt.Sprintf("message subst k ----->%v\n", k)
+						msgs <- fmt.Sprintf("message subst newMsg ----->%#v\n", newMsg)
+						msgs <- fmt.Sprintf("message subst msg ----->%v\n", newMsg[k+1])
+						msgs <- fmt.Sprintf("message subst param %s ----->%v\n", fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])))
 					}
 					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
 					msgOut <- msgStruct{Type: "M", Content: temp}
