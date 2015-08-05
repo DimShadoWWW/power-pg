@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -18,14 +19,15 @@ var (
 	localHost     = flag.String("l", ":9876", "Endereço e porta do listener local")
 	remoteHost    = flag.String("r", "localhost:5432", "Endereço e porta do servidor PostgreSQL")
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
-	messages      = []string{}
+	// messages      = []string{}
 )
 
 func main() {
 	flag.Parse()
 	msgs := make(chan string)
 	msgCh := make(chan proxy.Pkg)
-	msgOut := make(chan string)
+	msgOut1 := make(chan string)
+	msgOut2 := make(chan string)
 	if *remoteService != "" {
 		go func() {
 			time.Sleep(time.Second * 3)
@@ -36,9 +38,10 @@ func main() {
 
 			for scanner.Scan() {
 				time.Sleep(time.Second * 1)
-				messages = []string{}
+				// messages = []string{}
 				// fmt.Println(scanner.Text())
-				msgOut <- fmt.Sprintf("# %s\n", scanner.Text())
+				// msgOut1 <- fmt.Sprintf("# %s\n", scanner.Text())
+				msgOut1 <- scanner.Text()
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 				if errs != nil {
 					log.Fatalf("log failed: %v", errs)
@@ -66,21 +69,43 @@ func main() {
 
 	go func() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-		for msg := range msgOut {
-			if strings.Contains(msg, "# ") {
+		for {
+			c := 0
+			select {
+			case msg1 := <-msgOut1:
 				f.Close()
-				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", strings.Replace(msg, "# ", "", -1)), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg1), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				c = 0
 				if err != nil {
 					panic(err)
 				}
-			}
-			fmt.Println(msg)
-			_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
-			if err != nil {
-				log.Fatalf("log failed: %v", err)
+				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg1))
+				if err != nil {
+					log.Fatalf("log failed: %v", err)
+				}
+			case msg2 := <-msgOut2:
+				c = c + 1
+				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg2))
+				if err != nil {
+					log.Fatalf("log failed: %v", err)
+				}
 			}
 		}
-		f.Close()
+		// for msg := range msgOut {
+		// 	if strings.Contains(msg, "# ") {
+		// 		f.Close()
+		// 		f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", strings.Replace(msg, "# ", "", -1)), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		// 		if err != nil {
+		// 			panic(err)
+		// 		}
+		// 	}
+		// 	// fmt.Println(msg)
+		// 	_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
+		// 	if err != nil {
+		// 		log.Fatalf("log failed: %v", err)
+		// 	}
+		// }
+		// f.Close()
 	}()
 
 	go func() {
@@ -126,7 +151,8 @@ func main() {
 					fmt.Printf("SEP index ----->%v\n", sepIdx)
 					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
-					messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
+					// messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
+					msgOut2 <- string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
 				}
 			} else {
 				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
@@ -173,7 +199,15 @@ func main() {
 						fmt.Printf("vars   ----->%#v\n", vars)
 						varsIdx = append(varsIdx, i)
 						fmt.Printf("varIdx  ----->%#v\n", varsIdx)
+
 					}
+
+					sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
+					for _, k := range varsIdx {
+						// messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
+						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1)
+					}
+					msgOut2 <- temp
 					// fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
 
 					// idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
@@ -213,11 +247,11 @@ func main() {
 				}
 				temp = ""
 			}
-			fmt.Printf("---------->%v\n", messages)
-			fmt.Printf("---------->%#v\n", messages)
-			for k, v := range messages {
-				msgOut <- fmt.Sprintf("%d. %s\n", k+1, v)
-			}
+			// fmt.Printf("---------->%v\n", messages)
+			// fmt.Printf("---------->%#v\n", messages)
+			// for k, v := range messages {
+			// 	msgOut2 <- v
+			// }
 		}
 	}()
 
