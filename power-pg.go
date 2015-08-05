@@ -92,7 +92,7 @@ func main() {
 			} else {
 				// case msg2 := <-msgOut:
 				c = c + 1
-				_, err := f.WriteString(fmt.Sprintf("%d. %s\n", c, msg.Content))
+				_, err := f.WriteString(fmt.Sprintf("%d. ~~~ sql\n%s\n~~~\n", c, msg.Content))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
@@ -137,8 +137,15 @@ func main() {
 					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
-					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p+1])
-					temp = string(newMsg[:p+1])
+					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p])
+					// sepIdx := strings.Index(string(newMsg[:p+1]), string([]byte{0, 1, 0, 0}))
+					// if sepIdx == -1 {
+					// 	sepIdx = len(msg.Content) - 4
+					// }
+					// //
+					// // // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
+					// temp = string(msg.Content[selectIdx:sepIdx])
+					temp = string(newMsg[:p])
 					msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
 
 					// fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
@@ -153,13 +160,13 @@ func main() {
 					// if selectIdx == -1 {
 					// 	selectIdx = 0
 					// }
-					// sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
-					// if sepIdx == -1 {
-					// 	sepIdx = len(msg.Content) - 4
-					// }
+					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					if sepIdx == -1 {
+						sepIdx = len(msg.Content) - 4
+					}
 					//
 					// // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
-					// temp = string(msg.Content[selectIdx:sepIdx])
+					temp = string(msg.Content[selectIdx:sepIdx])
 					// fmt.Printf("SEP index ----->%v\n", sepIdx)
 					// fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					// fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
