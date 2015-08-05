@@ -36,7 +36,7 @@ func main() {
 
 			for scanner.Scan() {
 				time.Sleep(time.Second * 1)
-				// messages = []string{}
+				messages = []string{}
 				// fmt.Println(scanner.Text())
 				msgOut <- fmt.Sprintf("# %s\n", scanner.Text())
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
@@ -87,7 +87,6 @@ func main() {
 		temp := ""
 		for msg := range msgCh {
 			if msg.Type == 'P' {
-				messages = []string{}
 				if strings.Contains(string(msg.Content), "$1") {
 					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
 					if selectIdx == -1 {

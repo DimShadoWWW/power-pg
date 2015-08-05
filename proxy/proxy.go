@@ -146,27 +146,6 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 			if msgs != nil {
 				msgs <- fmt.Sprintf("len(r) : %v\n", len(r))
 			}
-			// if remainingBytes > 0 {
-			// 	if remainingBytes <= n {
-			// 		fmt.Println("1")
-			// 		newPacket = true
-			// 		msg = msg + string(r.next(remainingBytes))
-			// if msgCh != nil {
-			// 				msgCh <- 	fmt.Sprintf("2 Remaining bytes: %d\n", remainingBytes)}
-			// 		remainingBytes = n - remainingBytes
-			// if msgCh != nil {
-			// 				msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d\n", remainingBytes)}
-			// 		// fmt.Println("msg: ", string(msg))
-			// 	} else {
-			// 		fmt.Println("2")
-			// 		newPacket = false
-			// 		msg = msg + string(r.next(remainingBytes))
-			// 		remainingBytes = remainingBytes - n
-			// 	}
-			//
-			// 	if msgCh != nil {
-			// msgCh <- 	fmt.Sprintf("1 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
-			// }
 			fmt.Println("3")
 		NewP:
 			fmt.Println("4")
@@ -194,14 +173,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								newPacket = true
 								msg = append(msg, r.Next(remainingBytes)[:]...)
 								msg = spaces.ReplaceAll(msg, []byte{' '})
-								// msg = bytes.Trim(msg, "\x00")
-								// msg = bytes.Trim(msg, "\x01")
-								// msg = []byte(stripchars(string(msg),
-								// 	"\n\t"))
-								// msg = []byte(strings.Replace(string(msg), `\n`, "", -1))
-								// msg = []byte(strings.Replace(string(msg), `\t`, "", -1))
 								remainingBytes = n - remainingBytes
-
 								if msgCh != nil {
 									msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 								}
@@ -224,8 +196,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 								// 	msgCh <- string(msg)
 								// }
 								// p.result = append(p.result, string(msg))
-								fmt.Println(msg)
-								fmt.Println(string(msg))
+								// fmt.Println(msg)
+								// fmt.Println(string(msg))
 								goto NewP
 							} else {
 								newPacket = false
