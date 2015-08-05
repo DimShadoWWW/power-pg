@@ -160,8 +160,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 				n = n - 1
 				fmt.Println("t: ", string(t))
 				switch t {
-				// case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
-				case 'B', 'P':
+				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
+					// case 'B', 'P':
 					// c.rxReadyForQuery(r)
 					remainingBytes = r.Int32()
 					if remainingBytes < 4 {
