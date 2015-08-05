@@ -163,6 +163,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
 					// case 'B', 'P':
 					// c.rxReadyForQuery(r)
+					msgs <- fmt.Sprintf("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
 					if remainingBytes < 4 {
 						fmt.Errorf("ERROR: remainingBytes can't be less than 4 bytes if int32")
