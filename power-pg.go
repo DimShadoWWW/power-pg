@@ -208,6 +208,10 @@ func main() {
 					totalVar := newMsg.Int16()
 					vars := make(map[int]string)
 					var varsIdx []int
+					if totalVar == 0 && len(newMsg) > 4 {
+						totalVar = newMsg.Int16()
+					}
+					msgs <- fmt.Sprintf("totalVar   ----->%d\n", totalVar)
 					for i := 0; i < totalVar; i++ {
 						msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 						varLen := newMsg.Int32()
@@ -224,7 +228,6 @@ func main() {
 						msgs <- fmt.Sprintf("vars   ----->%#v\n", vars)
 						varsIdx = append(varsIdx, i)
 						msgs <- fmt.Sprintf("varIdx  ----->%#v\n", varsIdx)
-
 					}
 
 					sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
