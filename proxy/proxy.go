@@ -239,6 +239,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 					// 	softErr = e
 					// }
 				}
+				remainingBytes = 0
 			} else {
 				fmt.Println("7")
 				remainingBytes = 0
