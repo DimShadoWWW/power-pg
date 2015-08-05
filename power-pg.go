@@ -213,11 +213,11 @@ func main() {
 					sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
 					for _, k := range varsIdx {
 						// messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
-						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1)
+						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(vars[k+1])), -1)
 						msgs <- fmt.Sprintf("message subst k ----->%v\n", k)
 						msgs <- fmt.Sprintf("message subst newMsg ----->%#v\n", newMsg)
-						msgs <- fmt.Sprintf("message subst msg ----->%v\n", newMsg[k+1])
-						msgs <- fmt.Sprintf("message subst param %s ----->%v\n", fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])))
+						msgs <- fmt.Sprintf("message subst msg ----->%v\n", vars[k+1])
+						msgs <- fmt.Sprintf("message subst param %s ----->%v\n", fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(vars[k+1])))
 					}
 					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
 					msgOut <- msgStruct{Type: "M", Content: temp}
