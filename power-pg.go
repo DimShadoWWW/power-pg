@@ -87,6 +87,7 @@ func main() {
 		temp := ""
 		for msg := range msgCh {
 			if msg.Type == 'P' {
+				messages = []string{}
 				if strings.Contains(string(msg.Content), "$1") {
 					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
 					if selectIdx == -1 {
@@ -218,7 +219,6 @@ func main() {
 			for k, v := range messages {
 				msgOut <- fmt.Sprintf("%d. %s\n", k+1, v)
 			}
-			messages = []string{}
 		}
 	}()
 
