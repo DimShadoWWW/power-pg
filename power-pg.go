@@ -73,12 +73,13 @@ func main() {
 
 	go func() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		c := 0
 		for {
-			c := 0
 			// select {
 			// case msg1 := <-msgOut:
 			msg := <-msgOut
 			if msg.Type == "C" {
+				c = 0
 				f.Close()
 				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 				c = 0
