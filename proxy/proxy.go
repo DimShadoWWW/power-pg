@@ -134,6 +134,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 			}
 
 			r = buff[:n]
+			msgs <- fmt.Sprintf("PostgreSQL full message: %s\n", string(r))
 			// if msgCh != nil {
 			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
 			if msgs != nil {
