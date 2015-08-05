@@ -75,7 +75,7 @@ func main() {
 	go func() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		// c := 0
-		spaces := regexp.MustCompile("[\n\t]+")
+		spaces := regexp.MustCompile("[\t]+")
 		multipleSpaces := regexp.MustCompile("    ")
 		for {
 			// select {
