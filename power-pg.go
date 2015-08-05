@@ -159,14 +159,14 @@ func main() {
 					// selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
 					// if selectIdx == -1 {
 					// 	selectIdx = 0
+					// // }
+					// sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					// if sepIdx == -1 {
+					// 	sepIdx = len(msg.Content) - 4
 					// }
-					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
-					if sepIdx == -1 {
-						sepIdx = len(msg.Content) - 4
-					}
-					//
-					// // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
-					temp = string(msg.Content[selectIdx:sepIdx])
+					// //
+					// // // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
+					// temp = string(msg.Content[selectIdx:sepIdx])
 					// fmt.Printf("SEP index ----->%v\n", sepIdx)
 					// fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
 					// fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
