@@ -155,50 +155,51 @@ func main() {
 					msgOut2 <- string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
 				}
 			} else {
-				if msg.Type == 'B' && len(msg.Content) > 28 && temp != "" {
+				if msg.Type == 'B' && temp != "" {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
 
 					// The name of the destination portal (an empty string selects the unnamed portal).
 					p := bytes.Index(newMsg, []byte{0})
 					// remove first string
-					fmt.Printf("first string ends ----->%#v\n", p)
+					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
+					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
 					newMsg = newMsg[p+1:]
 					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
 					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
-					fmt.Printf("second string ends ---->%#v\n", p)
+					msgs <- fmt.Sprintf("second string ---->%#v\n", newMsg[:p+1])
 					newMsg = newMsg[p+1:]
 					fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
 
 					t := newMsg.Int16()
-					fmt.Printf("vars types numbers ---->%#v\n", t)
+					msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
 					for i := 0; i < t; i++ {
 						t = newMsg.Int16()
-						fmt.Printf("22 newMsg   ----->%#v\n", newMsg)
+						msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
 					}
 
 					totalVar := newMsg.Int16()
 					vars := make(map[int]string)
 					var varsIdx []int
 					for i := 0; i < totalVar; i++ {
-						fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
+						msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 						varLen := newMsg.Int32()
 						// aa := newMsg.Next(4)
 						// fmt.Printf("aa   -----> %#v\n", aa)
 						// fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
 						// varLen := int(binary.BigEndian.Uint32(aa))
-						fmt.Printf("varLen ----->%v\n", varLen)
-						fmt.Printf("newMsg   ----->%#v\n", newMsg)
+						msgs <- fmt.Sprintf("varLen ----->%v\n", varLen)
+						msgs <- fmt.Sprintf("newMsg   ----->%#v\n", newMsg)
 						if varLen > len(newMsg) {
 							varLen = len(newMsg) - 4
 						}
 						vars[i] = string(newMsg.Next(varLen))
-						fmt.Printf("vars   ----->%#v\n", vars)
+						msgs <- fmt.Sprintf("vars   ----->%#v\n", vars)
 						varsIdx = append(varsIdx, i)
-						fmt.Printf("varIdx  ----->%#v\n", varsIdx)
+						msgs <- fmt.Sprintf("varIdx  ----->%#v\n", varsIdx)
 
 					}
 
@@ -207,6 +208,7 @@ func main() {
 						// messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
 						temp = strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1)
 					}
+					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
 					msgOut2 <- temp
 					// fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
 

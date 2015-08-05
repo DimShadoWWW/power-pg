@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/DimShadoWWW/power-pg/common"
@@ -111,7 +110,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 	newPacket := true
 	var msg string
 	remainingBytes := 0
-	spaces := regexp.MustCompile("[\n\t ]+")
+	// spaces := regexp.MustCompile("[\n\t ]+")
 	if islocal {
 		for {
 			if remainingBytes == 0 {
