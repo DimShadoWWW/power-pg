@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -12,13 +13,21 @@ import (
 	"strings"
 	"time"
 
+	// "database/sql"
+
+	_ "github.com/lib/pq"
+
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/parnurzeal/gorequest"
 )
 
 var (
-	localHost     = flag.String("l", ":9876", "Endereço e porta do listener local")
-	remoteHost    = flag.String("r", "localhost:5432", "Endereço e porta do servidor PostgreSQL")
+	localHost     = flag.String("l", ":5432", "puerto local para escuchar")
+	dbHostname    = flag.String("h", "localhost", "hostname del servidor PostgreSQL")
+	dbPort        = flag.String("r", "5432", "puerto del servidor PostgreSQL")
+	dbName        = flag.String("d", "dbname", "nombre de la base de datos")
+	dbUsername    = flag.String("u", "username", "usuario para acceder al servidor PostgreSQL")
+	dbPassword    = flag.String("p", "password", "password para acceder al servidor PostgreSQL")
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
 	// messages      = []string{}
 )
@@ -28,8 +37,16 @@ type msgStruct struct {
 	Content string
 }
 
+var (
+	db *sql.DB
+)
+
 func main() {
 	flag.Parse()
+	// dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
+	// 	*dbUsername, *dbPassword, *dbName)
+	// db, err := sql.Open("postgres", dbinfo)
+
 	msgs := make(chan string)
 	msgCh := make(chan proxy.Pkg)
 	msgOut := make(chan msgStruct)
@@ -104,21 +121,6 @@ func main() {
 				}
 			}
 		}
-		// for msg := range msgOut {
-		// 	if strings.Contains(msg, "# ") {
-		// 		f.Close()
-		// 		f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", strings.Replace(msg, "# ", "", -1)), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-		// 		if err != nil {
-		// 			panic(err)
-		// 		}
-		// 	}
-		// 	// fmt.Println(msg)
-		// 	_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
-		// 	if err != nil {
-		// 		log.Fatalf("log failed: %v", err)
-		// 	}
-		// }
-		// f.Close()
 	}()
 
 	go func() {
@@ -144,38 +146,9 @@ func main() {
 					p = bytes.Index(newMsg, []byte{0})
 					// remove second string
 					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p])
-					// sepIdx := strings.Index(string(newMsg[:p+1]), string([]byte{0, 1, 0, 0}))
-					// if sepIdx == -1 {
-					// 	sepIdx = len(msg.Content) - 4
-					// }
-					// //
-					// // // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
-					// temp = string(msg.Content[selectIdx:sepIdx])
 					temp = string(newMsg[:p])
 					msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
 
-					// fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
-					//
-					// msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
-					// for i := 0; i < t; i++ {
-					// 	t = newMsg.Int16()
-					// 	msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
-					// }
-
-					// selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
-					// if selectIdx == -1 {
-					// 	selectIdx = 0
-					// // }
-					// sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
-					// if sepIdx == -1 {
-					// 	sepIdx = len(msg.Content) - 4
-					// }
-					// //
-					// // // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
-					// temp = string(msg.Content[selectIdx:sepIdx])
-					// fmt.Printf("SEP index ----->%v\n", sepIdx)
-					// fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
-					// fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
 				} else {
 					temp = ""
 					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
@@ -231,6 +204,7 @@ func main() {
 						msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
 					}
 
+					msgs <- fmt.Sprintf("23 newMsg   ----->%#v\n", newMsg)
 					totalVar := newMsg.Int16()
 					vars := make(map[int]string)
 					var varsIdx []int
@@ -265,54 +239,13 @@ func main() {
 					}
 					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
 					msgOut <- msgStruct{Type: "M", Content: temp}
-					// fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-
-					// idxPdo := strings.Index(string(msg.Content), "pdo_stmt_")
-					//
-					// if idxPdo != -1 {
-					// 	var newMsg proxy.ReadBuf
-					// 	// B type allways ends with 0100
-					// 	fmt.Printf("msg.Content   ----->%#v\n", msg.Content)
-					// 	newMsg = msg.Content[idxPdo+22 : len(msg.Content)-4]
-					// 	fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
-					// 	totalVar := newMsg.Int16()
-					//
-					// 	vars := make(map[int]string)
-					// 	var varsIdx []int
-					// 	for i := 0; i < totalVar; i++ {
-					// 		fmt.Printf("2 newMsg   ----->%#v\n", newMsg)
-					// 		// varLen := newMsg.Int32()
-					// 		aa := newMsg.Next(4)
-					// 		fmt.Printf("aa   -----> %#v\n", aa)
-					// 		fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
-					// 		varLen := int(binary.BigEndian.Uint32(aa))
-					// 		fmt.Printf("varLen ----->%v\n", varLen)
-					// 		fmt.Printf("newMsg   ----->%#v\n", newMsg)
-					// 		vars[i] = string(newMsg.Next(varLen))
-					// 		fmt.Printf("vars   ----->%#v\n", vars)
-					// 		varsIdx = append(varsIdx, i)
-					// 		fmt.Printf("varIdx  ----->%#v\n", varsIdx)
-					// 	}
-					// 	sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
-					// 	for _, k := range varsIdx {
-					// 		messages = append(messages, strings.Replace(temp, fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", string(newMsg[k+1])), -1))
-					// 	}
-					// } else {
-					// 	messages = append(messages, string(msg.Content[29:len(msg.Content)-4]))
-					// }
-
 				}
 				temp = ""
 			}
-			// fmt.Printf("---------->%v\n", messages)
-			// fmt.Printf("---------->%#v\n", messages)
-			// for k, v := range messages {
-			// 	msgOut <- v
-			// }
 		}
 	}()
 
-	proxy.Start(localHost, remoteHost, getQueryModificada, msgs, msgCh)
+	proxy.Start(localHost, dbHostname, dbPort, getQueryModificada, msgs, msgCh)
 }
 
 func getQueryModificada(queryOriginal string) string {

@@ -22,10 +22,10 @@ type Pkg struct {
 }
 
 // Start function
-func Start(localHost, remoteHost *string, powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
+func Start(localHost, remoteHost *string, remotePort *string, powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
-	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost)
+	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost, remotePort)
 	listener := getListener(localAddr)
 
 	for {
@@ -48,10 +48,10 @@ func Start(localHost, remoteHost *string, powerCallback common.Callback, msgs ch
 	}
 }
 
-func getResolvedAddresses(localHost, remoteHost *string) (*net.TCPAddr, *net.TCPAddr) {
+func getResolvedAddresses(localHost, remoteHost, remotePort *string) (*net.TCPAddr, *net.TCPAddr) {
 	laddr, err := net.ResolveTCPAddr("tcp", *localHost)
 	check(err)
-	raddr, err := net.ResolveTCPAddr("tcp", *remoteHost)
+	raddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%s", *remoteHost, *remotePort))
 	check(err)
 	return laddr, raddr
 }
