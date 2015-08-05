@@ -120,19 +120,46 @@ func main() {
 		for msg := range msgCh {
 			if msg.Type == 'P' {
 				if strings.Contains(string(msg.Content), "$1") {
-					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
-					if selectIdx == -1 {
-						selectIdx = 0
-					}
-					sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
-					if sepIdx == -1 {
-						sepIdx = len(msg.Content) - 4
-					}
+					var newMsg proxy.ReadBuf
+					newMsg = msg.Content
+					_ = newMsg.Int32()
 
-					temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
-					fmt.Printf("SEP index ----->%v\n", sepIdx)
-					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
-					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
+					// The name of the destination portal (an empty string selects the unnamed portal).
+					p := bytes.Index(newMsg, []byte{0})
+					// remove first string
+					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
+					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
+					newMsg = newMsg[p+1:]
+					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
+
+					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
+					p = bytes.Index(newMsg, []byte{0})
+					// remove second string
+					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p+1])
+					temp = string(newMsg[:p+1])
+
+					// fmt.Printf("1 newMsg   ----->%#v\n", newMsg)
+					//
+					// msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
+					// for i := 0; i < t; i++ {
+					// 	t = newMsg.Int16()
+					// 	msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
+					// }
+
+					// selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
+					// if selectIdx == -1 {
+					// 	selectIdx = 0
+					// }
+					// sepIdx := strings.Index(string(msg.Content), string([]byte{0, 1, 0, 0}))
+					// if sepIdx == -1 {
+					// 	sepIdx = len(msg.Content) - 4
+					// }
+					//
+					// // temp = string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))
+					// temp = string(msg.Content[selectIdx:sepIdx])
+					// fmt.Printf("SEP index ----->%v\n", sepIdx)
+					// fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
+					// fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
 				} else {
 					temp = ""
 					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
