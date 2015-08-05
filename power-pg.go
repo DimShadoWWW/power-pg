@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -74,6 +75,8 @@ func main() {
 	go func() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		// c := 0
+		spaces := regexp.MustCompile("[\n\t]+")
+		multipleSpaces := regexp.MustCompile("    ")
 		for {
 			// select {
 			// case msg1 := <-msgOut:
@@ -82,7 +85,7 @@ func main() {
 				// c = 0
 				f.Close()
 				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-				c = 0
+				// c = 0
 				if err != nil {
 					panic(err)
 				}
@@ -93,7 +96,9 @@ func main() {
 			} else {
 				// case msg2 := <-msgOut:
 				// c = c + 1
-				_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(msg.Content)))
+				m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
+				m = multipleSpaces.ReplaceAll(m, []byte{' '})
+				_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
