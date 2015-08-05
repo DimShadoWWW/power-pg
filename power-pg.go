@@ -73,7 +73,7 @@ func main() {
 
 	go func() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-		c := 0
+		// c := 0
 		for {
 			// select {
 			// case msg1 := <-msgOut:
@@ -93,7 +93,7 @@ func main() {
 			} else {
 				// case msg2 := <-msgOut:
 				// c = c + 1
-				_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", c, msg.Content))
+				_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(msg.Content)))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
