@@ -65,18 +65,22 @@ func main() {
 	}()
 
 	go func() {
-		f, err := os.OpenFile("/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
+		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		for msg := range msgOut {
+			if strings.Contains(msg, "# ") {
+				f.Close()
+				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", strings.Replace(msg, "# ", "", -1)), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				if err != nil {
+					panic(err)
+				}
+			}
 			fmt.Println(msg)
 			_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
 		}
+		f.Close()
 	}()
 
 	go func() {
