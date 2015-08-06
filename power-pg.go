@@ -199,13 +199,13 @@ func main() {
 
 					t := newMsg.Int16()
 					msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
-					for i := 0; i < t; i++ {
-						t = newMsg.Int16()
+					for t1 := 0; t1 == t; t1 = newMsg.Int16() {
 						msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
 					}
 
 					msgs <- fmt.Sprintf("23 newMsg   ----->%#v\n", newMsg)
-					totalVar := newMsg.Int16()
+					totalVar := t
+					// newMsg.Int16()
 					vars := make(map[int]string)
 					var varsIdx []int
 					if (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg) {
