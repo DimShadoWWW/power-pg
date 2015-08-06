@@ -149,11 +149,11 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 			fmt.Println("3")
 			// NewP:
 			fmt.Println("4")
-			if newPacket || (len(r) > 4 && remainingBytes == 0) {
+			if newPacket || (len(msg) > 4 && len(r) > 4 && remainingBytes == 0) {
 				fmt.Println("5")
 				// remainingBytes = 0
 				newPacket = false
-				if msgs != nil {
+				if msgs != nil && msg != "" {
 					msgs <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
