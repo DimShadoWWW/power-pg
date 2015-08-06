@@ -208,12 +208,16 @@ func main() {
 					totalVar := newMsg.Int16()
 					vars := make(map[int]string)
 					var varsIdx []int
-					if totalVar == 0 && len(newMsg) > 4 {
+					for totalVar := 0; (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg); {
 						totalVar = newMsg.Int16()
 					}
-					if totalVar == 0 && len(newMsg) > 4 {
-						totalVar = newMsg.Int32()
-					}
+					//
+					// if totalVar == 0 && len(newMsg) > 4 {
+					// 	totalVar = newMsg.Int16()
+					// }
+					// if totalVar == 0 && len(newMsg) > 4 {
+					// 	totalVar = newMsg.Int32()
+					// }
 					msgs <- fmt.Sprintf("totalVar   ----->%d\n", totalVar)
 					for i := 0; i < totalVar; i++ {
 						msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
