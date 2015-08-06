@@ -229,6 +229,8 @@ func main() {
 						msgs <- fmt.Sprintf("newMsg   ----->%#v\n", newMsg)
 						if varLen > len(newMsg) {
 							varLen = len(newMsg) - 4
+							msgs <- fmt.Sprintf("1 varLen ----->%v\n", varLen)
+							msgs <- fmt.Sprintf("1 newMsg   ----->%#v\n", newMsg)
 						}
 						vars[i] = string(newMsg.Next(varLen))
 						msgs <- fmt.Sprintf("vars   ----->%#v\n", vars)
