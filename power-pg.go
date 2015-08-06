@@ -139,8 +139,8 @@ func main() {
 					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 					msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
 					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
-					msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+1]))
-					newMsg = newMsg[p+1:]
+					msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+9]))
+					newMsg = newMsg[p+9:]
 					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
 					// // The name of the source prepared statement (an empty string selects the unnamed prepared statement).
