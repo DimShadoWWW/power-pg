@@ -93,6 +93,7 @@ func main() {
 		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 		// c := 0
 		spaces := regexp.MustCompile("[\t]+")
+		// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 		multipleSpaces := regexp.MustCompile("    ")
 		for {
 			// select {
@@ -133,7 +134,7 @@ func main() {
 					_ = newMsg.Int32()
 
 					// The name of the destination portal (an empty string selects the unnamed portal).
-					p := bytes.Index(newMsg, []byte{0})
+					p := bytes.Index(newMsg, []byte{112, 100, 111, 95, 115, 116, 109, 116, 95})
 					// remove first string
 					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 					msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
@@ -142,12 +143,12 @@ func main() {
 					newMsg = newMsg[p+1:]
 					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
-					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
-					p = bytes.Index(newMsg, []byte{0})
-					// remove second string
-					msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p])
-					temp = string(newMsg[:p])
-					msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
+					// // The name of the source prepared statement (an empty string selects the unnamed prepared statement).
+					// p = bytes.Index(newMsg, []byte{0})
+					// // remove second string
+					// msgs <- fmt.Sprintf("second string: message ---->%#v\n", newMsg[:p])
+					// temp = string(newMsg[:p])
+					// msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
 
 				} else {
 					temp = ""
@@ -187,7 +188,7 @@ func main() {
 					// remove first string
 					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
-					newMsg = newMsg[p:]
+					newMsg = newMsg[p+1:]
 					msgs <- fmt.Sprintf("0 newMsg   ----->%#v\n", newMsg)
 
 					if newMsg[0] == 0 {
