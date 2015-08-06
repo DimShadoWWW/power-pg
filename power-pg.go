@@ -209,6 +209,8 @@ func main() {
 					vars := make(map[int]string)
 					var varsIdx []int
 					if (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg) {
+						msgs <- fmt.Sprintf("23.1 newMsg   ----->%#v\n", newMsg)
+						msgs <- fmt.Sprintf("0 totalVar  ----->%d\n", totalVar)
 						for totalVar := 0; totalVar != 0 && totalVar < len(newMsg); {
 							totalVar = newMsg.Int16()
 							msgs <- fmt.Sprintf("24 newMsg   ----->%#v\n", newMsg)
