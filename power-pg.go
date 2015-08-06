@@ -178,7 +178,7 @@ func main() {
 					msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 				}
 			} else {
-				if msg.Type == 'B' && temp != "" {
+				if msg.Type == 'B' && temp != "" && len(msg.Content) > 28 {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
 
@@ -257,8 +257,10 @@ func main() {
 						msgs <- fmt.Sprintf("message subst param %s ----->%v\n", fmt.Sprintf("$%d", k+1), fmt.Sprintf("'%s'", vars[k]))
 					}
 					msgs <- fmt.Sprintf("end message  ----->%v\n", temp)
-					msgOut <- msgStruct{Type: "M", Content: temp}
+					// msgOut <- msgStruct{Type: "M", Content: temp}
+					// } else {
 				}
+				msgOut <- msgStruct{Type: "M", Content: temp}
 				temp = ""
 			}
 		}
