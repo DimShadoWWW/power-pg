@@ -187,7 +187,7 @@ func main() {
 					// remove first string
 					msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+1])
-					newMsg = newMsg[p+1:]
+					newMsg = newMsg[p:]
 					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
 
 					// The name of the source prepared statement (an empty string selects the unnamed prepared statement).
@@ -218,10 +218,13 @@ func main() {
 					for i := 0; i < totalVar; i++ {
 						msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 						varLen := newMsg.Int32()
-						// aa := newMsg.Next(4)
-						// fmt.Printf("aa   -----> %#v\n", aa)
-						// fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
-						// varLen := int(binary.BigEndian.Uint32(aa))
+						// var1 := newMsg.Next(4)
+						// // fmt.Printf("aa   -----> %#v\n", aa)
+						// // fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
+						// varLen := int(binary.BigEndian.Uint32(var1))
+						// if varLen > len(newMsg) {
+						// 	varLen = int(binary.BigEndian.Uint16(var1[:2]))
+						// }
 						msgs <- fmt.Sprintf("varLen ----->%v\n", varLen)
 						msgs <- fmt.Sprintf("newMsg   ----->%#v\n", newMsg)
 						if varLen > len(newMsg) {
