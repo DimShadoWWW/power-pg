@@ -129,6 +129,7 @@ func main() {
 		for msg := range msgCh {
 			msgs <- fmt.Sprintf("received ---->%#v\n", msg)
 			if msg.Type == byte('P') {
+				msgs <- fmt.Sprintf("1 received ---->%#v\n", msg)
 				if strings.Contains(string(msg.Content), "$1") {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
@@ -152,6 +153,7 @@ func main() {
 					// msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
 
 				} else {
+					msgs <- fmt.Sprintf("2 received ---->%#v\n", msg)
 					temp = ""
 					selectIdx := strings.Index(string(msg.Content), string([]byte{83, 69, 76, 69, 67, 84, 32}))
 					if selectIdx == -1 {
@@ -180,6 +182,7 @@ func main() {
 					msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 				}
 			} else {
+				msgs <- fmt.Sprintf("3 received ---->%#v\n", msg)
 				if msg.Type == byte('B') && temp != "" && len(msg.Content) > 28 {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
