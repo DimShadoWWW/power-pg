@@ -127,6 +127,8 @@ func main() {
 	go func() {
 		temp := ""
 		for msg := range msgCh {
+
+			msgs <- fmt.Sprintf("recived ---->%#v\n", msg)
 			if msg.Type == 'P' {
 				if strings.Contains(string(msg.Content), "$1") {
 					var newMsg proxy.ReadBuf
