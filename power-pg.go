@@ -184,7 +184,7 @@ func main() {
 				}
 			} else {
 				msgs <- fmt.Sprintf("3 received ---->%#v\n", msg)
-				if msg.Type == byte('B') && temp != "" && len(msg.Content) > 28 {
+				if msg.Type == byte('B') && temp != "" && len(msg.Content) > 23 {
 					msgs <- fmt.Sprintf("4 received ---->%#v\n", msg)
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
