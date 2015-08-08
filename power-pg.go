@@ -129,8 +129,8 @@ func main() {
 		for msg := range msgCh {
 			msgs <- fmt.Sprintf("received ---->%#v\n", msg)
 			if msg.Type == byte('P') {
-				msgs <- fmt.Sprintf("1 received ---->%#v\n", msg)
 				if strings.Contains(string(msg.Content), "$1") {
+					msgs <- fmt.Sprintf("1 received ---->%#v\n", msg)
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
 					_ = newMsg.Int32()
@@ -152,6 +152,7 @@ func main() {
 					// temp = string(newMsg[:p])
 					// msgs <- fmt.Sprintf("second string: message temp ---->%s\n", temp)
 
+					msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
 				} else {
 					msgs <- fmt.Sprintf("2 received ---->%#v\n", msg)
 					temp = ""
@@ -184,9 +185,11 @@ func main() {
 			} else {
 				msgs <- fmt.Sprintf("3 received ---->%#v\n", msg)
 				if msg.Type == byte('B') && temp != "" && len(msg.Content) > 28 {
+					msgs <- fmt.Sprintf("4 received ---->%#v\n", msg)
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
 
+					msgs <- fmt.Sprintf("5 received ---->%#v\n", msg)
 					// The name of the destination portal (an empty string selects the unnamed portal).
 					p := bytes.Index(newMsg, []byte{0})
 					// remove first string
