@@ -127,9 +127,8 @@ func main() {
 	go func() {
 		temp := ""
 		for msg := range msgCh {
-
-			msgs <- fmt.Sprintf("recived ---->%#v\n", msg)
-			if msg.Type == 'P' {
+			msgs <- fmt.Sprintf("received ---->%#v\n", msg)
+			if msg.Type == byte('P') {
 				if strings.Contains(string(msg.Content), "$1") {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
@@ -181,7 +180,7 @@ func main() {
 					msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 				}
 			} else {
-				if msg.Type == 'B' && temp != "" && len(msg.Content) > 28 {
+				if msg.Type == byte('B') && temp != "" && len(msg.Content) > 28 {
 					var newMsg proxy.ReadBuf
 					newMsg = msg.Content
 
