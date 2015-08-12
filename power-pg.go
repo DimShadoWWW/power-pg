@@ -190,30 +190,52 @@ func logReport() {
 		// case msg1 := <-msgOut:
 		msg := <-msgOut
 		log.Debug("%#v\n", msg)
-		if msg.Content != "" {
-			if msg.Type == "C" {
-				// c = 0
-				f.Close()
-				f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-				// c = 0
-				if err != nil {
-					panic(err)
-				}
-				_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
-				if err != nil {
-					log.Fatalf("log failed: %v", err)
-				}
-			} else {
-				// case msg2 := <-msgOut:
-				// c = c + 1
-				m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
-				m = multipleSpaces.ReplaceAll(m, []byte{' '})
-				_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
-				if err != nil {
-					log.Fatalf("log failed: %v", err)
-				}
+		// if msg.Content != "" {
+		switch msg.Type {
+		case "C":
+			// c = 0
+			f.Close()
+			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+			// c = 0
+			if err != nil {
+				panic(err)
+			}
+			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			}
+		case "B":
+			// case msg2 := <-msgOut:
+			// c = c + 1
+			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
+			m = multipleSpaces.ReplaceAll(m, []byte{' '})
+			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
 			}
 		}
+		// if msg.Type == "C" {
+		// 	// c = 0
+		// 	f.Close()
+		// 	f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		// 	// c = 0
+		// 	if err != nil {
+		// 		panic(err)
+		// 	}
+		// 	_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
+		// 	if err != nil {
+		// 		log.Fatalf("log failed: %v", err)
+		// 	}
+		// } else {
+		// 	// case msg2 := <-msgOut:
+		// 	// c = c + 1
+		// 	m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
+		// 	m = multipleSpaces.ReplaceAll(m, []byte{' '})
+		// 	_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
+		// 	if err != nil {
+		// 		log.Fatalf("log failed: %v", err)
+		// 	}
+		// }
 	}
 }
 func base() {
