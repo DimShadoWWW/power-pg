@@ -185,11 +185,11 @@ func logReport() {
 	spaces := regexp.MustCompile("[\t]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
-	for {
+	for msg := range msgOut {
 		// select {
 		// case msg1 := <-msgOut:
-		msg := <-msgOut
-		log.Debug("%#v\n", msg)
+		//
+		log.Debug("msg := <-msgOut '%#v'\n", msg)
 		if msg.Type == "C" {
 			// c = 0
 			f.Close()
@@ -214,6 +214,7 @@ func logReport() {
 		}
 	}
 }
+
 func base() {
 	temp := ""
 	for msg := range msgCh {
