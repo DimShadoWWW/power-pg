@@ -98,7 +98,7 @@ func callURIs() {
 
 		_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 		if errs != nil {
-			log.Fatal("log failed: %v", errs)
+			log.Fatalf("log failed: %v", errs)
 		}
 	}
 	log.Info("done")
@@ -153,12 +153,12 @@ func recreateLogDump() {
 		spew.Dump(msg)
 		_, err := f.Write(msg)
 		if err != nil {
-			log.Fatal("log failed: %v", err)
+			log.Fatalf("log failed: %v", err)
 		}
 
 		_, err = f.Write([]byte("\nENDMSG\n"))
 		if err != nil {
-			log.Fatal("log failed: %v", err)
+			log.Fatalf("log failed: %v", err)
 		}
 	}
 }
@@ -178,7 +178,7 @@ func baseLog() {
 		log.Debug(msg)
 		_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
 		if err != nil {
-			log.Fatal("log failed: %v", err)
+			log.Fatalf("log failed: %v", err)
 		}
 	}
 }
@@ -208,7 +208,7 @@ func logReport() {
 			}
 			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 			if err != nil {
-				log.Fatal("log failed: %v", err)
+				log.Fatalf("log failed: %v", err)
 			}
 		} else {
 			// case msg2 := <-msgOut:
@@ -217,11 +217,11 @@ func logReport() {
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			log.Debug("1 SQL")
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
-			log.Debug("2 SQL")
-			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
+			// log.Debug("SQL: %s", fmt.Sprintf("\n```sql\n%s\n```\n", string(m.Content)))
+			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m.Content)))
 			log.Debug("3 SQL")
 			if err != nil {
-				log.Fatal("log failed: %v", err)
+				log.Fatalf("log failed: %v", err)
 			}
 			log.Debug("4 SQL")
 		}
