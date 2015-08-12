@@ -69,7 +69,7 @@ func main() {
 		}
 		go recreateLogDump()
 	}
-	// go baseLog()
+	go baseLog()
 	go logReport()
 	go base()
 	proxy.Start(localHost, dbHostname, dbPort, msgs, msgCh, *recreate)
@@ -159,7 +159,7 @@ func recreateLogDoNothing() {
 }
 
 func baseLog() {
-	f, err := os.OpenFile("/all.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	f, err := os.OpenFile("/all2.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		panic(err)
 	}
