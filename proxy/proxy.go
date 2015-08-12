@@ -163,8 +163,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 					log.Debug("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
+				log.Debug("1 n: %d\n", n)
 				t := r.Byte()
 				n = n - 1
+				log.Debug("2 n: %d\n", n)
 				fmt.Println("t: ", string(t))
 				switch t {
 				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
@@ -172,21 +174,26 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 					// c.rxReadyForQuery(r)
 					log.Debug("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
+					if msgCh != nil {
+						log.Debug("1 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
+					}
 					if remainingBytes < 4 {
 						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
 						remainingBytes = remainingBytes - 4
+						if msgCh != nil {
+							log.Debug("2 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
+						}
 						if remainingBytes > 0 {
 							if remainingBytes > n {
 								remainingBytes = n
 							}
+							log.Debug("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+
 							newPacket = true
 							msg = append(msg, r.Next(remainingBytes)[:]...)
 							// msg = spaces.ReplaceAll(msg, []byte{' '})
 							remainingBytes = n - remainingBytes
-							if msgCh != nil {
-								log.Debug("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-							}
 							if msgBytes != nil {
 								log.Debug("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 							}
