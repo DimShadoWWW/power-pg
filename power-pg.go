@@ -16,11 +16,13 @@ import (
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
+	log "github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
 	_ "github.com/lib/pq"
-	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 )
+
+// "github.com/op/go-logging"
 
 var (
 	localHost     = flag.String("l", ":5432", "puerto local para escuchar")
@@ -45,17 +47,17 @@ var (
 	msgCh    = make(chan proxy.Pkg)
 	msgOut   = make(chan msgStruct)
 
-	db  *sql.DB
-	log = logging.MustGetLogger("")
+	db *sql.DB
+	// log = logging.MustGetLogger("")
 )
 
 func main() {
 	flag.Parse()
 
-	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
-	logBackendFormatter := logging.NewBackendFormatter(logBackend,
-		logging.MustStringFormatter("%{color}%{time:15:04:05} %{longfunc:.15s} ▶ %{level:.5s} %{id:03d}%{color:reset} %{message}"))
-	logging.SetBackend(logBackend, logBackendFormatter)
+	// logBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	// logBackendFormatter := logging.NewBackendFormatter(logBackend,
+	// 	logging.MustStringFormatter("%{color}%{time:15:04:05} %{longfunc:.15s} ▶ %{level:.5s} %{id:03d}%{color:reset} %{message}"))
+	// logging.SetBackend(logBackend, logBackendFormatter)
 
 	go func() {
 		log.Debug(http.ListenAndServe(":6060", nil).Error())
@@ -73,7 +75,7 @@ func main() {
 	go baseLog()
 	go logReport()
 	go base()
-	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate, log)
+	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate)
 }
 
 func getQueryModificada(queryOriginal string) string {
@@ -191,12 +193,12 @@ func logReport() {
 		// case msg1 := <-msgOut:
 		//
 		spew.Dump(msg)
-		log.Debug("msg := <-msgOut '%#v'\n", msg)
+		log.Debugf("msg := <-msgOut '%#v'\n", msg)
 		if msg.Type == "C" {
-			log.Debug("C\n")
+			log.Debug("C")
 			// c = 0
 			f.Close()
-			log.Debug("1 C\n")
+			log.Debug("1 C")
 			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
 			if err != nil {
@@ -209,13 +211,17 @@ func logReport() {
 		} else {
 			// case msg2 := <-msgOut:
 			// c = c + 1
-			log.Debug("SQL\n")
+			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
+			log.Debug("1 SQL")
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
+			log.Debug("2 SQL")
 			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
+			log.Debug("3 SQL")
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
+			log.Debug("4 SQL")
 		}
 	}
 }
@@ -243,7 +249,7 @@ func base() {
 				newMsg = newMsg[p+stringSize+1:]
 				p = bytes.Index(newMsg, []byte{0})
 				newMsg = newMsg[:p]
-				log.Debug("0 newMsg   ----->%s\n", newMsg)
+				log.Debugf("0 newMsg   ----->%s\n", newMsg)
 
 				temp = string(newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
@@ -270,9 +276,9 @@ func base() {
 					selectIdx = 0
 				}
 
-				log.Debug("SEP index ----->%v\n", sepIdx)
-				log.Debug("SEP len   ----->%v\n", len(msg.Content))
-				log.Debug("SEP CONT  ----->%v\n", msg.Content)
+				log.Debugf("SEP index ----->%v\n", sepIdx)
+				log.Debugf("SEP len   ----->%v\n", len(msg.Content))
+				log.Debugf("SEP CONT  ----->%v\n", msg.Content)
 				// messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
 				msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 			}
@@ -343,8 +349,8 @@ func base() {
 					msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 					varLen := newMsg.Int32()
 					// var1 := newMsg.Next(4)
-					// // log.Debug("aa   -----> %#v\n", aa)
-					// // log.Debug("aa bits ----->%8b\n", aa[len(aa)-1])
+					// // log.Debugf("aa   -----> %#v\n", aa)
+					// // log.Debugf("aa bits ----->%8b\n", aa[len(aa)-1])
 					// varLen := int(binary.BigEndian.Uint32(var1))
 					// if varLen > len(newMsg) {
 					// 	varLen = int(binary.BigEndian.Uint16(var1[:2]))
