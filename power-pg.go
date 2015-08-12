@@ -199,6 +199,7 @@ func logReport() {
 		if msg.Type == "C" {
 			log.Debug("C")
 			// c = 0
+			log.Info("%#v\n", f)
 			f.Close()
 			log.Debug("1 C")
 			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
@@ -213,6 +214,7 @@ func logReport() {
 		} else {
 			// case msg2 := <-msgOut:
 			// c = c + 1
+			log.Info("%#v\n", f)
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			log.Debug("1 SQL")
