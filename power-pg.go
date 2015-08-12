@@ -125,7 +125,13 @@ func recreateFunc() {
 	scanner.Split(bufio.ScanLines)
 
 	for scanner.Scan() {
-		_, err := conn.Write(scanner.Bytes())
+		msg := []byte{}
+		for !strings.Contains(scanner.Text(), "ENDMSG") {
+			msg = append(msg, scanner.Bytes()[:]...)
+			scanner.Scan()
+		}
+
+		_, err := conn.Write(msg)
 		if err != nil {
 			log.Critical("Write failed '%s'\n", err)
 		}
@@ -146,7 +152,7 @@ func recreateLogDump() {
 			log.Fatalf("log failed: %v", err)
 		}
 
-		_, err = f.Write([]byte{'\n'})
+		_, err = f.Write([]byte("\nENDMSG\n"))
 		if err != nil {
 			log.Fatalf("log failed: %v", err)
 		}
