@@ -368,17 +368,19 @@ func base() {
 					// if varLen > len(newMsg) {
 					// 	varLen = int(binary.BigEndian.Uint16(var1[:2]))
 					// }
-					msgs <- fmt.Sprintf("varLen ----->%v\n", varLen)
-					msgs <- fmt.Sprintf("newMsg   ----->%#v\n", newMsg)
-					if varLen > len(newMsg) {
-						varLen = len(newMsg) - 4
-						msgs <- fmt.Sprintf("1 varLen ----->%v\n", varLen)
-						msgs <- fmt.Sprintf("1 newMsg   ----->%#v\n", newMsg)
+					if varLen > 0 {
+						msgs <- fmt.Sprintf("varLen ----->%v\n", varLen)
+						msgs <- fmt.Sprintf("newMsg   ----->%#v\n", newMsg)
+						if varLen > len(newMsg) {
+							varLen = len(newMsg) - 4
+							msgs <- fmt.Sprintf("1 varLen ----->%v\n", varLen)
+							msgs <- fmt.Sprintf("1 newMsg   ----->%#v\n", newMsg)
+						}
+						vars[i] = string(newMsg.Next(varLen))
+						msgs <- fmt.Sprintf("vars   ----->%#v\n", vars)
+						varsIdx = append(varsIdx, i)
+						msgs <- fmt.Sprintf("varIdx  ----->%#v\n", varsIdx)
 					}
-					vars[i] = string(newMsg.Next(varLen))
-					msgs <- fmt.Sprintf("vars   ----->%#v\n", vars)
-					varsIdx = append(varsIdx, i)
-					msgs <- fmt.Sprintf("varIdx  ----->%#v\n", varsIdx)
 				}
 
 				sort.Sort(sort.Reverse(sort.IntSlice(varsIdx)))
