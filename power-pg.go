@@ -305,24 +305,26 @@ func base() {
 
 				t := newMsg.Int16()
 				msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
-				for t1 := 0; t1 == t; t1 = newMsg.Int16() {
-					msgs <- fmt.Sprintf("22 newMsg   ----->%#v\n", newMsg)
+				// read variables' types
+				for t1 := 0; t1 < t; t1 = newMsg.Int16() {
+					varType := newMsg.Int16()
+					msgs <- fmt.Sprintf("var #%d typeId----->%#v\n", t1+1, varType)
 				}
 
 				msgs <- fmt.Sprintf("23 newMsg   ----->%#v\n", newMsg)
 				msgs <- fmt.Sprintf("23 t        ----->%#v\n", t)
-				totalVar := t
-				// newMsg.Int16()
+				// var total
+				totalVar := newMsg.Int16()
 				vars := make(map[int]string)
 				var varsIdx []int
-				if (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg) {
-					msgs <- fmt.Sprintf("23.1 newMsg   ----->%#v\n", newMsg)
-					msgs <- fmt.Sprintf("0 totalVar  ----->%d\n", totalVar)
-					for totalVar := 0; totalVar != 0 && totalVar < len(newMsg); totalVar = newMsg.Int16() {
-						msgs <- fmt.Sprintf("24 newMsg   ----->%#v\n", newMsg)
-						msgs <- fmt.Sprintf("1 totalVar  ----->%d\n", totalVar)
-					}
-				}
+				// if (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg) {
+				// 	msgs <- fmt.Sprintf("23.1 newMsg   ----->%#v\n", newMsg)
+				// 	msgs <- fmt.Sprintf("0 totalVar  ----->%d\n", totalVar)
+				// 	for totalVar := 0; totalVar != 0 && totalVar < len(newMsg); totalVar = newMsg.Int16() {
+				// 		msgs <- fmt.Sprintf("24 newMsg   ----->%#v\n", newMsg)
+				// 		msgs <- fmt.Sprintf("1 totalVar  ----->%d\n", totalVar)
+				// 	}
+				// }
 				//
 				// if totalVar == 0 && len(newMsg) > 4 {
 				// 	totalVar = newMsg.Int16()
