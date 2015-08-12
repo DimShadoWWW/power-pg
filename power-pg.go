@@ -229,13 +229,14 @@ func base() {
 				// The name of the destination portal (an empty string selects the unnamed portal).
 				p := bytes.Index(newMsg, []byte{112, 100, 111, 95, 115, 116, 109, 116, 95})
 				// remove first string
+				stringSize := 14
 				msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 				msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
-				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+14])
-				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+14]))
-				newMsg = newMsg[p+15:]
+				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:stringSize+14])
+				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:stringSize+14]))
+				newMsg = newMsg[p+stringSize+1:]
 				p = bytes.Index(newMsg, []byte{0})
-				newMsg = newMsg[:p+1]
+				newMsg = newMsg[:p-1]
 				log.Debug("0 newMsg   ----->%s\n", newMsg)
 
 				temp = string(newMsg)
