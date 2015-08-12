@@ -195,7 +195,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 							// msg = spaces.ReplaceAll(msg, []byte{' '})
 							remainingBytes = n - remainingBytes
 							if msgBytes != nil {
-								log.Debug("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+								log.Debug("3.1 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 							}
 
 							if msgCh != nil {
