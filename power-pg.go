@@ -189,6 +189,7 @@ func logReport() {
 	spaces := regexp.MustCompile("[ \t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
+	fname := ""
 	for msg := range msgOut {
 		spew.Dump(msg)
 		// select {
@@ -200,9 +201,9 @@ func logReport() {
 			log.Debug("C")
 			// c = 0
 			log.Info("%#v\n", f)
-			f.Close()
 			log.Debug("1 C")
-			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+			fname = fmt.Sprintf("/reports/report-%s.md", msg.Content)
+			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
 			if err != nil {
 				panic(err)
@@ -211,6 +212,7 @@ func logReport() {
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
+			f.Close()
 		} else {
 			// case msg2 := <-msgOut:
 			// c = c + 1
@@ -225,11 +227,13 @@ func logReport() {
 			m1 = append(m1, []byte("\n```\n")[:]...)
 			spew.Dump(m1)
 			spew.Dump(f)
-			_, err := f.Write(m1)
+			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			_, err = f.Write(m1)
 			log.Debug("3 SQL")
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
+			f.Close()
 			log.Debug("4 SQL")
 		}
 	}
