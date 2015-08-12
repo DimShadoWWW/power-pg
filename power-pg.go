@@ -230,10 +230,10 @@ func base() {
 				// remove first string
 				msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 				msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
-				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+16])
-				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+16]))
+				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+15])
+				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+15]))
 				newMsg = newMsg[p+16:]
-				log.Debug("0 newMsg   ----->%#v\n", newMsg)
+				log.Debug("0 newMsg   ----->%s\n", newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
 			} else {
 				msgs <- fmt.Sprintf("2 received ---->%#v\n", msg)
