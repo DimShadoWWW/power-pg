@@ -221,6 +221,7 @@ func base() {
 		if msg.Type == byte('P') {
 			if strings.Contains(string(msg.Content), "$1") {
 				msgs <- fmt.Sprintf("1 received ---->%#v\n", msg)
+				msgs <- fmt.Sprintf("1 received ---->%d bytes\n", len(msg.Content))
 				var newMsg proxy.ReadBuf
 				newMsg = msg.Content
 				_ = newMsg.Int32()
@@ -230,8 +231,8 @@ func base() {
 				// remove first string
 				msgs <- fmt.Sprintf("msg ---->%#v\n", newMsg)
 				msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
-				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+15])
-				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+15]))
+				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+14])
+				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+14]))
 				newMsg = newMsg[p+16:]
 				log.Debug("0 newMsg   ----->%s\n", newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
