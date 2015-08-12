@@ -174,6 +174,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 					// c.rxReadyForQuery(r)
 					log.Debug("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
+					n = n - 4
 					if msgCh != nil {
 						log.Debug("1 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
 					}
