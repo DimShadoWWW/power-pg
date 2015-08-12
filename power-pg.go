@@ -236,7 +236,7 @@ func base() {
 				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:stringSize+14]))
 				newMsg = newMsg[p+stringSize+1:]
 				p = bytes.Index(newMsg, []byte{0})
-				newMsg = newMsg[:p-1]
+				newMsg = newMsg[:p]
 				log.Debug("0 newMsg   ----->%s\n", newMsg)
 
 				temp = string(newMsg)
