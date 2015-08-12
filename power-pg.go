@@ -217,8 +217,9 @@ func logReport() {
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			log.Debug("1 SQL")
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
-			// log.Debug("SQL: %s", fmt.Sprintf("\n```sql\n%s\n```\n", string(m.Content)))
-			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m.Content)))
+			log.Debug("SQL: %s", fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
+			spew.Dump(m)
+			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
 			log.Debug("3 SQL")
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
