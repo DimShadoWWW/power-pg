@@ -234,8 +234,11 @@ func base() {
 				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+14])
 				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+14]))
 				newMsg = newMsg[p+15:]
-				temp = string(newMsg)
+				p = bytes.Index(newMsg, []byte{0})
+				newMsg = newMsg[:p+1]
 				log.Debug("0 newMsg   ----->%s\n", newMsg)
+
+				temp = string(newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
 			} else {
 				msgs <- fmt.Sprintf("2 received ---->%#v\n", msg)
