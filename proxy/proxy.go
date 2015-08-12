@@ -22,7 +22,7 @@ type Pkg struct {
 }
 
 // Start function
-func Start(localHost, remoteHost *string, remotePort *string, powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
+func Start(localHost, remoteHost *string, remotePort *string, msgs chan string, msgCh chan Pkg, recreate bool) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
 	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost, remotePort)
@@ -44,7 +44,7 @@ func Start(localHost, remoteHost *string, remotePort *string, powerCallback comm
 			errsig: make(chan bool),
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
 		}
-		go p.start(powerCallback, msgs, msgCh)
+		go p.start(msgs, msgCh, recreate)
 	}
 }
 
@@ -84,7 +84,7 @@ func (p *proxy) err(s string, err error) {
 	p.erred = true
 }
 
-func (p *proxy) start(powerCallback common.Callback, msgs chan string, msgCh chan Pkg) {
+func (p *proxy) start(msgs chan string, msgCh chan Pkg, recreate bool) {
 	// defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -96,13 +96,13 @@ func (p *proxy) start(powerCallback common.Callback, msgs chan string, msgCh cha
 	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, msgs, msgCh)
-	go p.pipe(p.rconn, p.lconn, nil, nil)
+	go p.pipe(p.lconn, p.rconn, msgs, msgCh, recreate)
+	go p.pipe(p.rconn, p.lconn, nil, nil, recreate)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
+func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, recreate bool) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
@@ -127,10 +127,12 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 			}
 			b := buff[:n]
 			//write out result
-			n, err = dst.Write(b)
-			if err != nil {
-				p.err("Write failed '%s'\n", err)
-				return
+			if !recreate {
+				n, err = dst.Write(b)
+				if err != nil {
+					p.err("Write failed '%s'\n", err)
+					return
+				}
 			}
 
 			r = buff[:n]
@@ -167,7 +169,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg) {
 					msgs <- fmt.Sprintf("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
 					if remainingBytes < 4 {
-						fmt.Errorf("ERROR: remainingBytes can't be less than 4 bytes if int32")
+						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
 						remainingBytes = remainingBytes - 4
 						if remainingBytes > 0 {
