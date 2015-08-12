@@ -233,7 +233,7 @@ func base() {
 				msgs <- fmt.Sprintf("msg ---->%s\n", string(newMsg))
 				msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+14])
 				msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+14]))
-				newMsg = newMsg[p+15:]
+				newMsg = newMsg[p+14:]
 				log.Debug("0 newMsg   ----->%s\n", newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
 			} else {
