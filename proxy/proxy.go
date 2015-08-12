@@ -183,9 +183,11 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 					if remainingBytes < 4 {
 						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
-						r[strings.Index(string(msg.Content), string([]byte{0})):]
-						log.Debug("r: %v\n", r)
-						log.Debug("string(r): %s\n", string(r))
+						s := strings.Index(string(msg), string([]byte{0}))
+						n = remainingBytes - s
+						msg = msg[:]
+						log.Debug("r: %v\n", msg)
+						log.Debug("string(r): %s\n", string(msg))
 
 						if msgCh != nil {
 							log.Debug("2 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
