@@ -303,18 +303,18 @@ func base() {
 				newMsg = newMsg[p+1:]
 				msgs <- fmt.Sprintf("1 newMsg   ----->%#v\n", newMsg)
 
-				t := newMsg.Int16()
-				msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", t)
+				totalVar := newMsg.Int16()
+				msgs <- fmt.Sprintf("vars types numbers ---->%#v\n", totalVar)
 				// read variables' types
-				for t1 := 0; t1 < t; t1 = newMsg.Int16() {
+				for t1 := 0; t1 < totalVar; t1 = newMsg.Int16() {
 					varType := newMsg.Int16()
 					msgs <- fmt.Sprintf("var #%d typeId----->%#v\n", t1+1, varType)
 				}
 
 				msgs <- fmt.Sprintf("23 newMsg   ----->%#v\n", newMsg)
-				msgs <- fmt.Sprintf("23 t        ----->%#v\n", t)
+				msgs <- fmt.Sprintf("23 t        ----->%#v\n", totalVar)
 				// var total
-				totalVar := newMsg.Int16()
+				// totalVar := newMsg.Int16()
 				vars := make(map[int]string)
 				var varsIdx []int
 				// if (totalVar == 0 && len(newMsg) > 4) || totalVar > len(newMsg) {
