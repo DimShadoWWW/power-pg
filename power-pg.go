@@ -310,6 +310,7 @@ func base() {
 				}
 
 				msgs <- fmt.Sprintf("23 newMsg   ----->%#v\n", newMsg)
+				msgs <- fmt.Sprintf("23 t        ----->%#v\n", t)
 				totalVar := t
 				// newMsg.Int16()
 				vars := make(map[int]string)
