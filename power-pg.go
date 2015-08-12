@@ -183,6 +183,7 @@ func logReport() {
 		// select {
 		// case msg1 := <-msgOut:
 		msg := <-msgOut
+		log.Debug("%#v\n", msg)
 		if msg.Type == "C" {
 			// c = 0
 			f.Close()
