@@ -129,6 +129,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				log.Debug("Readed bytes: %d\n", n)
 			}
 			b := buff[:n]
+			log.Info("Readed: %v\n", b)
 			msgBytes <- b
 			//write out result
 			if !recreate {
@@ -138,8 +139,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 					return
 				}
 			}
-
-			r = b
+			r = buff[:n]
 			log.Debug("PostgreSQL full message: %s\n", string(r))
 			// if msgCh != nil {
 			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
