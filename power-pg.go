@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
+	"github.com/davecgh/go-spew/spew"
 	_ "github.com/lib/pq"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
@@ -189,6 +190,7 @@ func logReport() {
 		// select {
 		// case msg1 := <-msgOut:
 		//
+		spew.Dump(msg)
 		log.Debug("msg := <-msgOut '%#v'\n", msg)
 		if msg.Type == "C" {
 			// c = 0
