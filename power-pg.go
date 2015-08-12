@@ -72,7 +72,7 @@ func main() {
 	go baseLog()
 	go logReport()
 	go base()
-	proxy.Start(localHost, dbHostname, dbPort, msgs, msgCh, *recreate, log)
+	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate, log)
 }
 
 func getQueryModificada(queryOriginal string) string {
