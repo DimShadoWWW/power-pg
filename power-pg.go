@@ -190,9 +190,7 @@ func logReport() {
 		// case msg1 := <-msgOut:
 		msg := <-msgOut
 		log.Debug("%#v\n", msg)
-		// if msg.Content != "" {
-		switch msg.Type {
-		case "C":
+		if msg.Type == "C" {
 			// c = 0
 			f.Close()
 			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
@@ -204,7 +202,7 @@ func logReport() {
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
-		case "B":
+		} else {
 			// case msg2 := <-msgOut:
 			// c = c + 1
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
@@ -214,28 +212,6 @@ func logReport() {
 				log.Fatalf("log failed: %v", err)
 			}
 		}
-		// if msg.Type == "C" {
-		// 	// c = 0
-		// 	f.Close()
-		// 	f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-		// 	// c = 0
-		// 	if err != nil {
-		// 		panic(err)
-		// 	}
-		// 	_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
-		// 	if err != nil {
-		// 		log.Fatalf("log failed: %v", err)
-		// 	}
-		// } else {
-		// 	// case msg2 := <-msgOut:
-		// 	// c = c + 1
-		// 	m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
-		// 	m = multipleSpaces.ReplaceAll(m, []byte{' '})
-		// 	_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
-		// 	if err != nil {
-		// 		log.Fatalf("log failed: %v", err)
-		// 	}
-		// }
 	}
 }
 func base() {
@@ -290,6 +266,8 @@ func base() {
 			}
 		} else {
 			msgs <- fmt.Sprintf("3 received ---->%#v\n", msg)
+			msgs <- fmt.Sprintf("3 temp ---->%#v\n", temp)
+			msgs <- fmt.Sprintf("3 len(msg.Content) ---->%#v\n", len(msg.Content))
 			if msg.Type == byte('B') && temp != "" && len(msg.Content) > 23 {
 				msgs <- fmt.Sprintf("4 received ---->%#v\n", msg)
 				var newMsg proxy.ReadBuf
