@@ -16,13 +16,13 @@ import (
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
-	log "github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
 	_ "github.com/lib/pq"
+	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 )
 
-// "github.com/op/go-logging"
+// log "github.com/Sirupsen/logrus"
 
 var (
 	localHost     = flag.String("l", ":5432", "puerto local para escuchar")
@@ -47,17 +47,17 @@ var (
 	msgCh    = make(chan proxy.Pkg)
 	msgOut   = make(chan msgStruct)
 
-	db *sql.DB
-	// log = logging.MustGetLogger("")
+	db  *sql.DB
+	log = logging.MustGetLogger("")
 )
 
 func main() {
 	flag.Parse()
 
-	// logBackend := logging.NewLogBackend(os.Stdout, "", 0)
-	// logBackendFormatter := logging.NewBackendFormatter(logBackend,
-	// 	logging.MustStringFormatter("%{color}%{time:15:04:05} %{longfunc:.15s} ▶ %{level:.5s} %{id:03d}%{color:reset} %{message}"))
-	// logging.SetBackend(logBackend, logBackendFormatter)
+	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	logBackendFormatter := logging.NewBackendFormatter(logBackend,
+		logging.MustStringFormatter("%{color}%{time:15:04:05} %{longfunc:.15s} ▶ %{level:.5s} %{id:03d}%{color:reset} %{message}"))
+	logging.SetBackend(logBackend, logBackendFormatter)
 
 	go func() {
 		log.Debug(http.ListenAndServe(":6060", nil).Error())
@@ -75,7 +75,7 @@ func main() {
 	go baseLog()
 	go logReport()
 	go base()
-	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate)
+	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate, log)
 }
 
 func getQueryModificada(queryOriginal string) string {
@@ -98,7 +98,7 @@ func callURIs() {
 
 		_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 		if errs != nil {
-			log.Fatalf("log failed: %v", errs)
+			log.Fatal("log failed: %v", errs)
 		}
 	}
 	log.Info("done")
@@ -108,13 +108,13 @@ func callURIs() {
 func recreateFunc() {
 	laddr, err := net.ResolveTCPAddr("tcp", *localHost)
 	if err != nil {
-		log.Warningf("Local recreation's connection failed: %s", err)
+		log.Critical("Local recreation's connection failed: %s", err)
 		return
 	}
 
 	conn, err := net.DialTCP("tcp", nil, laddr)
 	if err != nil {
-		log.Warningf("Local recreation's connection failed: %s", err)
+		log.Critical("Local recreation's connection failed: %s", err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func recreateFunc() {
 
 		_, err := conn.Write(msg)
 		if err != nil {
-			log.Warningf("Write failed '%s'\n", err)
+			log.Critical("Write failed '%s'\n", err)
 		}
 	}
 }
@@ -153,12 +153,12 @@ func recreateLogDump() {
 		spew.Dump(msg)
 		_, err := f.Write(msg)
 		if err != nil {
-			log.Fatalf("log failed: %v", err)
+			log.Fatal("log failed: %v", err)
 		}
 
 		_, err = f.Write([]byte("\nENDMSG\n"))
 		if err != nil {
-			log.Fatalf("log failed: %v", err)
+			log.Fatal("log failed: %v", err)
 		}
 	}
 }
@@ -178,7 +178,7 @@ func baseLog() {
 		log.Debug(msg)
 		_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
 		if err != nil {
-			log.Fatalf("log failed: %v", err)
+			log.Fatal("log failed: %v", err)
 		}
 	}
 }
@@ -195,7 +195,7 @@ func logReport() {
 		// case msg1 := <-msgOut:
 		//
 		// spew.Dump(msg)
-		log.Debugf("msg := <-msgOut '%#v'\n", msg)
+		log.Debug("msg := <-msgOut '%#v'\n", msg)
 		if msg.Type == "C" {
 			log.Debug("C")
 			// c = 0
@@ -208,7 +208,7 @@ func logReport() {
 			}
 			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 			if err != nil {
-				log.Fatalf("log failed: %v", err)
+				log.Fatal("log failed: %v", err)
 			}
 		} else {
 			// case msg2 := <-msgOut:
@@ -221,7 +221,7 @@ func logReport() {
 			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
 			log.Debug("3 SQL")
 			if err != nil {
-				log.Fatalf("log failed: %v", err)
+				log.Fatal("log failed: %v", err)
 			}
 			log.Debug("4 SQL")
 		}
@@ -251,7 +251,7 @@ func base() {
 				newMsg = newMsg[p+stringSize+1:]
 				p = bytes.Index(newMsg, []byte{0})
 				newMsg = newMsg[:p]
-				log.Debugf("0 newMsg   ----->%s\n", newMsg)
+				log.Debug("0 newMsg   ----->%s\n", newMsg)
 
 				temp = string(newMsg)
 				msgs <- fmt.Sprintf("1 temp ---->%#v\n", temp)
@@ -278,9 +278,9 @@ func base() {
 					selectIdx = 0
 				}
 
-				log.Debugf("SEP index ----->%v\n", sepIdx)
-				log.Debugf("SEP len   ----->%v\n", len(msg.Content))
-				log.Debugf("SEP CONT  ----->%v\n", msg.Content)
+				log.Debug("SEP index ----->%v\n", sepIdx)
+				log.Debug("SEP len   ----->%v\n", len(msg.Content))
+				log.Debug("SEP CONT  ----->%v\n", msg.Content)
 				// messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
 				msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 			}
@@ -351,8 +351,8 @@ func base() {
 					msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 					varLen := newMsg.Int32()
 					// var1 := newMsg.Next(4)
-					// // log.Debugf("aa   -----> %#v\n", aa)
-					// // log.Debugf("aa bits ----->%8b\n", aa[len(aa)-1])
+					// // log.Debug("aa   -----> %#v\n", aa)
+					// // log.Debug("aa bits ----->%8b\n", aa[len(aa)-1])
 					// varLen := int(binary.BigEndian.Uint32(var1))
 					// if varLen > len(newMsg) {
 					// 	varLen = int(binary.BigEndian.Uint16(var1[:2]))

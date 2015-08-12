@@ -9,10 +9,8 @@ import (
 	"strings"
 
 	"github.com/DimShadoWWW/power-pg/common"
-	log "github.com/Sirupsen/logrus"
+	"github.com/op/go-logging"
 )
-
-// "github.com/op/go-logging"
 
 var (
 	connid = uint64(0)
@@ -25,7 +23,7 @@ type Pkg struct {
 }
 
 // Start function
-func Start(localHost, remoteHost *string, remotePort *string, msgBytes chan []byte, msgCh chan Pkg, recreate bool) {
+func Start(localHost, remoteHost *string, remotePort *string, msgBytes chan []byte, msgCh chan Pkg, recreate bool, log *logging.Logger) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
 	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost, remotePort)
@@ -46,7 +44,7 @@ func Start(localHost, remoteHost *string, remotePort *string, msgBytes chan []by
 			erred:  false,
 			errsig: make(chan bool),
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
-			// log:    log,
+			log:    log,
 		}
 		go p.start(msgBytes, msgCh, recreate)
 	}
@@ -75,7 +73,7 @@ type proxy struct {
 	errsig        chan bool
 	prefix        string
 	result        *[]string
-	// log           *logging.Logger
+	log           *logging.Logger
 }
 
 func (p *proxy) err(s string, err error) {
@@ -101,13 +99,13 @@ func (p *proxy) start(msgBytes chan []byte, msgCh chan Pkg, recreate bool) {
 	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, msgBytes, msgCh, recreate)
-	go p.pipe(p.rconn, p.lconn, nil, nil, recreate)
+	go p.pipe(p.lconn, p.rconn, msgBytes, msgCh, recreate, p.log)
+	go p.pipe(p.rconn, p.lconn, nil, nil, recreate, p.log)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg, recreate bool) {
+func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg, recreate bool, log *logging.Logger) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
@@ -128,10 +126,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				return
 			}
 			if msgBytes != nil {
-				log.Debugf("Readed bytes: %d\n", n)
+				log.Debug("Readed bytes: %d\n", n)
 			}
 			b := buff[:n]
-			log.Infof("Readed: %v\n", b)
+			log.Info("Readed: %v\n", b)
 			msgBytes <- b
 			//write out result
 			if !recreate {
@@ -142,17 +140,17 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				}
 			}
 			r = buff[:n]
-			log.Debugf("PostgreSQL full message: %s\n", string(r))
+			log.Debug("PostgreSQL full message: %s\n", string(r))
 			// if msgCh != nil {
 			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
 			if msgBytes != nil {
-				log.Debugf("Remaining bytes: %d\n", remainingBytes)
+				log.Debug("Remaining bytes: %d\n", remainingBytes)
 			}
 			if msgBytes != nil {
-				log.Debugf("newPacket : %v\n", newPacket)
+				log.Debug("newPacket : %v\n", newPacket)
 			}
 			if msgBytes != nil {
-				log.Debugf("len(r) : %v\n", len(r))
+				log.Debug("len(r) : %v\n", len(r))
 			}
 			fmt.Println("3")
 			// NewP:
@@ -162,51 +160,51 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				// remainingBytes = 0
 				newPacket = false
 				if msgBytes != nil && msg != "" {
-					log.Debugf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+					log.Debug("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
-				log.Debugf("1 n: %d\n", n)
+				log.Debug("1 n: %d\n", n)
 				t := r.Byte()
 				n = n - 1
-				log.Debugf("2 n: %d\n", n)
+				log.Debug("2 n: %d\n", n)
 				fmt.Println("t: ", string(t))
 				switch t {
 				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
 					// case 'B', 'P':
 					// c.rxReadyForQuery(r)
-					log.Debugf("PostgreSQL pkg type: %s\n", string(t))
+					log.Debug("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
 					remainingBytes = remainingBytes - 4
 					r = r[:remainingBytes]
 					n = remainingBytes
 					if msgCh != nil {
-						log.Debugf("1 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
+						log.Debug("1 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
 					}
 					if remainingBytes < 4 {
 						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
-						// log.Debugf("1 r: %v\n", r)
-						// log.Debugf("1 string(r): %s\n", string(r))
+						// log.Debug("1 r: %v\n", r)
+						// log.Debug("1 string(r): %s\n", string(r))
 						// s := strings.Index(string(r), string([]byte{0})) + 1
 						// remainingBytes = remainingBytes - s
 						// r = r[s:]
-						// log.Debugf("2 r: %v\n", r)
-						// log.Debugf("2 string(r): %s\n", string(r))
-						// log.Debugf("2 len(r): %s\n", len(r))
-						// log.Debugf("2 Remaining bytes: %d\n", remainingBytes)
+						// log.Debug("2 r: %v\n", r)
+						// log.Debug("2 string(r): %s\n", string(r))
+						// log.Debug("2 len(r): %s\n", len(r))
+						// log.Debug("2 Remaining bytes: %d\n", remainingBytes)
 
 						if msgCh != nil {
-							log.Debugf("2 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
+							log.Debug("2 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
 						}
 						if remainingBytes > 0 {
-							log.Debugf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+							log.Debug("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 
 							newPacket = true
 							msg = append(msg, r.Next(remainingBytes)[:]...)
 							// msg = spaces.ReplaceAll(msg, []byte{' '})
 							remainingBytes = n - remainingBytes
 							if msgBytes != nil {
-								log.Debugf("3.1 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+								log.Debug("3.1 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 							}
 
 							if msgCh != nil {
@@ -226,7 +224,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 							// 	// 	"\n\t"))
 							// 	remainingBytes = remainingBytes - n
 							// 	if msgBytes != nil {
-							// 		log.Debugf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+							// 		log.Debug("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							// 	}
 						}
 					}
