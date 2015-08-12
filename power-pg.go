@@ -203,6 +203,7 @@ func logReport() {
 			if err != nil {
 				panic(err)
 			}
+			spew.Dump(msg)
 			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
