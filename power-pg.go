@@ -150,6 +150,7 @@ func recreateLogDump() {
 	for msg := range msgBytes {
 		// log.Debug(msg)
 		// .WriteString(fmt.Sprintf("%s\n", msg))
+		spew.Dump(msg)
 		_, err := f.Write(msg)
 		if err != nil {
 			log.Fatalf("log failed: %v", err)
@@ -189,6 +190,7 @@ func logReport() {
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
 	for msg := range msgOut {
+		spew.Dump(msg)
 		// select {
 		// case msg1 := <-msgOut:
 		//
@@ -204,7 +206,6 @@ func logReport() {
 			if err != nil {
 				panic(err)
 			}
-			spew.Dump(msg)
 			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
