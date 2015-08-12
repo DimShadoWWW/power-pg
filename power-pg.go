@@ -7,17 +7,16 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
 
-	// "database/sql"
-
-	_ "github.com/lib/pq"
-
 	"github.com/DimShadoWWW/power-pg/proxy"
+	_ "github.com/lib/pq"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 )
@@ -56,6 +55,10 @@ func main() {
 	logBackendFormatter := logging.NewBackendFormatter(logBackend,
 		logging.MustStringFormatter("%{color}%{time:15:04:05} %{longfunc:.15s} ▶ %{level:.5s} %{id:03d}%{color:reset} %{message}"))
 	logging.SetBackend(logBackend, logBackendFormatter)
+
+	go func() {
+		log.Debug(http.ListenAndServe(":6060", nil).Error())
+	}()
 
 	if *recreate {
 		go recreateFunc()
