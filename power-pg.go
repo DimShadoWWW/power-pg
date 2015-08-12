@@ -17,6 +17,7 @@ import (
 
 	"github.com/DimShadoWWW/power-pg/proxy"
 	log "github.com/Sirupsen/logrus"
+	"github.com/davecgh/go-spew/spew"
 	_ "github.com/lib/pq"
 	"github.com/parnurzeal/gorequest"
 )
