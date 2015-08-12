@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/DimShadoWWW/power-pg/common"
+	"github.com/op/go-logging"
 )
 
 var (
@@ -22,7 +23,7 @@ type Pkg struct {
 }
 
 // Start function
-func Start(localHost, remoteHost *string, remotePort *string, msgs chan string, msgCh chan Pkg, recreate bool) {
+func Start(localHost, remoteHost *string, remotePort *string, msgBytes chan []byte, msgCh chan Pkg, recreate bool, log *logging.Logger) {
 	fmt.Printf("Proxying from %v to %v\n", localHost, remoteHost)
 
 	localAddr, remoteAddr := getResolvedAddresses(localHost, remoteHost, remotePort)
@@ -43,8 +44,9 @@ func Start(localHost, remoteHost *string, remotePort *string, msgs chan string, 
 			erred:  false,
 			errsig: make(chan bool),
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
+			log:    log,
 		}
-		go p.start(msgs, msgCh, recreate)
+		go p.start(msgBytes, msgCh, recreate)
 	}
 }
 
@@ -71,6 +73,7 @@ type proxy struct {
 	errsig        chan bool
 	prefix        string
 	result        *[]string
+	log           *logging.Logger
 }
 
 func (p *proxy) err(s string, err error) {
@@ -84,7 +87,7 @@ func (p *proxy) err(s string, err error) {
 	p.erred = true
 }
 
-func (p *proxy) start(msgs chan string, msgCh chan Pkg, recreate bool) {
+func (p *proxy) start(msgBytes chan []byte, msgCh chan Pkg, recreate bool) {
 	// defer p.lconn.conn.Close()
 	//connect to remote
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -96,13 +99,13 @@ func (p *proxy) start(msgs chan string, msgCh chan Pkg, recreate bool) {
 	// p.rconn.alive = true
 	// defer p.rconn.conn.Close()
 	//bidirectional copy
-	go p.pipe(p.lconn, p.rconn, msgs, msgCh, recreate)
-	go p.pipe(p.rconn, p.lconn, nil, nil, recreate)
+	go p.pipe(p.lconn, p.rconn, msgBytes, msgCh, recreate, p.log)
+	go p.pipe(p.rconn, p.lconn, nil, nil, recreate, p.log)
 	//wait for close...
 	<-p.errsig
 }
 
-func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, recreate bool) {
+func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg, recreate bool, log *logging.Logger) {
 	//data direction
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
@@ -122,10 +125,11 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 				p.err("Read failed '%s'\n", err)
 				return
 			}
-			if msgs != nil {
-				msgs <- fmt.Sprintf("Readed bytes: %d\n", n)
+			if msgBytes != nil {
+				log.Debug("Readed bytes: %d\n", n)
 			}
 			b := buff[:n]
+			msgBytes <- b
 			//write out result
 			if !recreate {
 				n, err = dst.Write(b)
@@ -135,18 +139,18 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 				}
 			}
 
-			r = buff[:n]
-			msgs <- fmt.Sprintf("PostgreSQL full message: %s\n", string(r))
+			r = b
+			log.Debug("PostgreSQL full message: %s\n", string(r))
 			// if msgCh != nil {
 			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
-			if msgs != nil {
-				msgs <- fmt.Sprintf("Remaining bytes: %d\n", remainingBytes)
+			if msgBytes != nil {
+				log.Debug("Remaining bytes: %d\n", remainingBytes)
 			}
-			if msgs != nil {
-				msgs <- fmt.Sprintf("newPacket : %v\n", newPacket)
+			if msgBytes != nil {
+				log.Debug("newPacket : %v\n", newPacket)
 			}
-			if msgs != nil {
-				msgs <- fmt.Sprintf("len(r) : %v\n", len(r))
+			if msgBytes != nil {
+				log.Debug("len(r) : %v\n", len(r))
 			}
 			fmt.Println("3")
 			// NewP:
@@ -155,8 +159,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 				fmt.Println("5")
 				// remainingBytes = 0
 				newPacket = false
-				if msgs != nil && msg != "" {
-					msgs <- fmt.Sprintf("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+				if msgBytes != nil && msg != "" {
+					log.Debug("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 				}
 				var msg []byte
 				t := r.Byte()
@@ -166,7 +170,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
 					// case 'B', 'P':
 					// c.rxReadyForQuery(r)
-					msgs <- fmt.Sprintf("PostgreSQL pkg type: %s\n", string(t))
+					log.Debug("PostgreSQL pkg type: %s\n", string(t))
 					remainingBytes = r.Int32()
 					if remainingBytes < 4 {
 						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
@@ -181,10 +185,10 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 							// msg = spaces.ReplaceAll(msg, []byte{' '})
 							remainingBytes = n - remainingBytes
 							if msgCh != nil {
-								msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+								log.Debug("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							}
-							if msgs != nil {
-								msgs <- fmt.Sprintf("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+							if msgBytes != nil {
+								log.Debug("3 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
 							}
 
 							if msgCh != nil {
@@ -203,8 +207,8 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgs chan string, msgCh chan Pkg, rec
 							// 	// msg = []byte(stripchars(string(msg),
 							// 	// 	"\n\t"))
 							// 	remainingBytes = remainingBytes - n
-							// 	if msgs != nil {
-							// 		msgs <- fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
+							// 	if msgBytes != nil {
+							// 		log.Debug("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
 							// 	}
 						}
 					}
