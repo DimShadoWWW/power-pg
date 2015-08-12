@@ -131,7 +131,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				log.Debugf("Readed bytes: %d\n", n)
 			}
 			b := buff[:n]
-			log.Info("Readed: %v\n", b)
+			log.Infof("Readed: %v\n", b)
 			msgBytes <- b
 			//write out result
 			if !recreate {
