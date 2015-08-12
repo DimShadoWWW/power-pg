@@ -59,12 +59,13 @@ func main() {
 
 	if *recreate {
 		go recreateFunc()
+		go recreateLogDoNothing()
 	} else {
 		if *remoteService != "" {
 			go callURIs()
 		}
+		go recreateLogDump()
 	}
-	go recreateLog()
 	// go baseLog()
 	go logReport()
 	go base()
@@ -128,7 +129,7 @@ func recreateFunc() {
 	}
 }
 
-func recreateLog() {
+func recreateLogDump() {
 	f, err := os.OpenFile("/all.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		panic(err)
@@ -146,6 +147,11 @@ func recreateLog() {
 		if err != nil {
 			log.Fatalf("log failed: %v", err)
 		}
+	}
+}
+
+func recreateLogDoNothing() {
+	for range msgBytes {
 	}
 }
 
