@@ -108,13 +108,13 @@ func callURIs() {
 func recreateFunc() {
 	laddr, err := net.ResolveTCPAddr("tcp", *localHost)
 	if err != nil {
-		log.Critical("Local recreation's connection failed: %s", err)
+		log.Warningf("Local recreation's connection failed: %s", err)
 		return
 	}
 
 	conn, err := net.DialTCP("tcp", nil, laddr)
 	if err != nil {
-		log.Critical("Local recreation's connection failed: %s", err)
+		log.Warningf("Local recreation's connection failed: %s", err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func recreateFunc() {
 
 		_, err := conn.Write(msg)
 		if err != nil {
-			log.Critical("Write failed '%s'\n", err)
+			log.Warningf("Write failed '%s'\n", err)
 		}
 	}
 }
