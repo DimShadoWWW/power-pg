@@ -183,7 +183,7 @@ func baseLog() {
 func logReport() {
 	var f *os.File
 
-	spaces := regexp.MustCompile("[\t]+")
+	spaces := regexp.MustCompile("[ \t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
 	for msg := range msgOut {
@@ -193,8 +193,10 @@ func logReport() {
 		spew.Dump(msg)
 		log.Debug("msg := <-msgOut '%#v'\n", msg)
 		if msg.Type == "C" {
+			log.Debug("C\n")
 			// c = 0
 			f.Close()
+			log.Debug("1 C\n")
 			f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
 			if err != nil {
@@ -207,6 +209,7 @@ func logReport() {
 		} else {
 			// case msg2 := <-msgOut:
 			// c = c + 1
+			log.Debug("SQL\n")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
 			_, err := f.WriteString(fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
