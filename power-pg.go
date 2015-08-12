@@ -222,6 +222,7 @@ func logReport() {
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
 			spew.Dump(m1)
+			spew.Dump(f)
 			_, err := f.Write(m1)
 			log.Debug("3 SQL")
 			if err != nil {
