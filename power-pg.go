@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -18,6 +17,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
+	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -38,11 +38,18 @@ type msgStruct struct {
 }
 
 var (
-	db *sql.DB
+	db  *sql.DB
+	log = logging.MustGetLogger("")
 )
 
 func main() {
 	flag.Parse()
+
+	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	logBackendFormatter := logging.NewBackendFormatter(logBackend,
+		logging.MustStringFormatter("%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"))
+	logging.SetBackend(logBackend, logBackendFormatter)
+
 	// dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
 	// 	*dbUsername, *dbPassword, *dbName)
 	// db, err := sql.Open("postgres", dbinfo)
@@ -61,7 +68,7 @@ func main() {
 			for scanner.Scan() {
 				time.Sleep(time.Second * 1)
 				// messages = []string{}
-				// fmt.Println(scanner.Text())
+				// log.Debug(scanner.Text())
 				// msgOut <- fmt.Sprintf("# %s\n", scanner.Text())
 				msgOut <- msgStruct{Type: "C", Content: scanner.Text()}
 				_, _, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
@@ -69,7 +76,7 @@ func main() {
 					log.Fatalf("log failed: %v", errs)
 				}
 			}
-			log.Println("done")
+			log.Info("done")
 			os.Exit(0)
 		}()
 	}
@@ -81,7 +88,7 @@ func main() {
 		}
 		defer f.Close()
 		for msg := range msgs {
-			// fmt.Println(msg)
+			log.Debug(msg)
 			_, err := f.WriteString(fmt.Sprintf("%s\n", msg))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
@@ -90,7 +97,7 @@ func main() {
 	}()
 
 	go func() {
-		f, err := os.OpenFile("/reports/report.md", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+		var f *os.File
 		// c := 0
 		spaces := regexp.MustCompile("[\t]+")
 		// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
@@ -102,12 +109,12 @@ func main() {
 			if msg.Type == "C" {
 				// c = 0
 				f.Close()
-				f, err = os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+				f, err := os.OpenFile(fmt.Sprintf("/reports/report-%s.md", msg.Content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 				// c = 0
 				if err != nil {
 					panic(err)
 				}
-				_, err := f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
+				_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
 				if err != nil {
 					log.Fatalf("log failed: %v", err)
 				}
@@ -143,7 +150,7 @@ func main() {
 					msgs <- fmt.Sprintf("first string ---->%#v\n", newMsg[:p+16])
 					msgs <- fmt.Sprintf("first string ---->%s\n", string(newMsg[:p+16]))
 					newMsg = newMsg[p+16:]
-					fmt.Printf("0 newMsg   ----->%#v\n", newMsg)
+					log.Debug("0 newMsg   ----->%#v\n", newMsg)
 
 					// // The name of the source prepared statement (an empty string selects the unnamed prepared statement).
 					// p = bytes.Index(newMsg, []byte{0})
@@ -176,9 +183,9 @@ func main() {
 						selectIdx = 0
 					}
 
-					fmt.Printf("SEP index ----->%v\n", sepIdx)
-					fmt.Printf("SEP len   ----->%v\n", len(msg.Content))
-					fmt.Printf("SEP CONT  ----->%v\n", msg.Content)
+					log.Debug("SEP index ----->%v\n", sepIdx)
+					log.Debug("SEP len   ----->%v\n", len(msg.Content))
+					log.Debug("SEP CONT  ----->%v\n", msg.Content)
 					// messages = append(messages, string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00")))
 					msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content[selectIdx:sepIdx], "\x00"))}
 				}
@@ -244,8 +251,8 @@ func main() {
 						msgs <- fmt.Sprintf("2 newMsg   ----->%#v\n", newMsg)
 						varLen := newMsg.Int32()
 						// var1 := newMsg.Next(4)
-						// // fmt.Printf("aa   -----> %#v\n", aa)
-						// // fmt.Printf("aa bits ----->%8b\n", aa[len(aa)-1])
+						// // log.Debug("aa   -----> %#v\n", aa)
+						// // log.Debug("aa bits ----->%8b\n", aa[len(aa)-1])
 						// varLen := int(binary.BigEndian.Uint32(var1))
 						// if varLen > len(newMsg) {
 						// 	varLen = int(binary.BigEndian.Uint16(var1[:2]))
@@ -287,12 +294,12 @@ func main() {
 }
 
 func getQueryModificada(queryOriginal string) string {
-	// log.Println("aa")
+	// log.Info("aa")
 	// if queryOriginal[:5] != "power" {
 	// 	return queryOriginal
 	// }
 
-	// log.Println(queryOriginal)
-	fmt.Println(queryOriginal)
+	// log.Info(queryOriginal)
+	log.Debug(queryOriginal)
 	return queryOriginal
 }
