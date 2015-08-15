@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -110,26 +111,25 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 	islocal := src == p.lconn
 	//directional copy (64k buffer)
 	buff := make(ReadBuf, 0xffff)
-	newPacket := true
-	var msg string
-	remainingBytes := 0
+
 	// spaces := regexp.MustCompile("[\n\t ]+")
 	if islocal {
 		for {
-			if remainingBytes == 0 {
-				newPacket = true
-			}
+			remainingBytes := 0
 			var r ReadBuf
+
+			// fmt.Println("1111")
 			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
-			if msgBytes != nil {
-				log.Debug("Readed bytes: %d\n", n)
-			}
+
+			// if msgBytes != nil {
+			// log.Debug("Readed bytes: %d\n", n)
+			// }
 			b := buff[:n]
-			log.Info("Readed: %v\n", b)
+			// log.Info("Readed: %v\n", b)
 			msgBytes <- b
 			//write out result
 			if !recreate {
@@ -140,173 +140,48 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				}
 			}
 			r = buff[:n]
-			log.Debug("PostgreSQL full message: %s\n", string(r))
-			// if msgCh != nil {
-			// 						msgCh <- 	fmt.Sprintf("%#v", string(buff[:n]))}
-			if msgBytes != nil {
-				log.Debug("Remaining bytes: %d\n", remainingBytes)
-			}
-			if msgBytes != nil {
-				log.Debug("newPacket : %v\n", newPacket)
-			}
-			if msgBytes != nil {
-				log.Debug("len(r) : %v\n", len(r))
-			}
-			fmt.Println("3")
-			// NewP:
-			fmt.Println("4")
-			if newPacket || (len(msg) > 4 && len(r) > 4 && remainingBytes == 0) {
-				fmt.Println("5")
-				// remainingBytes = 0
-				newPacket = false
-				if msgBytes != nil && msg != "" {
-					log.Debug("2 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-				}
+			// log.Debug("PostgreSQL full message: %s\n", string(r))
+			// log.Debug("Remaining bytes: %d\n", remainingBytes)
+			// log.Debug("len(r) : %v\n", len(r))
+			// fmt.Println("3")
+			if len(r) > 4 {
+				// fmt.Println("4")
+				// log.Debug("2 Remaining bytes: %d\n", remainingBytes)
+
 				var msg []byte
-				log.Debug("1 n: %d\n", n)
+				// log.Debug("1 n: %d\n", n)
 				t := r.Byte()
-				n = n - 1
-				log.Debug("2 n: %d\n", n)
-				fmt.Println("t: ", string(t))
+				// fmt.Println("t: ", string(t))
 				switch t {
-				case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
-					// case 'B', 'P':
-					// c.rxReadyForQuery(r)
+				// case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
+				case 'B', 'P':
 					log.Debug("PostgreSQL pkg type: %s\n", string(t))
-					remainingBytes = r.Int32()
-					remainingBytes = remainingBytes - 4
+					remainingBytes = r.Int32() - 4
 					r = r[:remainingBytes]
-					n = remainingBytes
-					if msgCh != nil {
-						log.Debug("1 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
-					}
 					if remainingBytes < 4 {
 						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
 					} else {
-						// log.Debug("1 r: %v\n", r)
-						// log.Debug("1 string(r): %s\n", string(r))
-						// s := strings.Index(string(r), string([]byte{0})) + 1
-						// remainingBytes = remainingBytes - s
-						// r = r[s:]
-						// log.Debug("2 r: %v\n", r)
-						// log.Debug("2 string(r): %s\n", string(r))
-						// log.Debug("2 len(r): %s\n", len(r))
-						// log.Debug("2 Remaining bytes: %d\n", remainingBytes)
-
-						if msgCh != nil {
-							log.Debug("2 Remaining bytes: %d \tn: %d\n", remainingBytes, n)
-						}
 						if remainingBytes > 0 {
-							log.Debug("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-
-							newPacket = true
 							msg = append(msg, r.Next(remainingBytes)[:]...)
-							// msg = spaces.ReplaceAll(msg, []byte{' '})
-							remainingBytes = n - remainingBytes
-							if msgBytes != nil {
-								log.Debug("3.1 Remaining bytes: %d \tmsg: %v\n", remainingBytes, msg)
+							msgCh <- Pkg{
+								Type:    t,
+								Content: msg,
 							}
-
-							if msgCh != nil {
-								msgCh <- Pkg{
-									Type:    t,
-									Content: msg,
-								}
-							}
-							remainingBytes = 0
-							// goto NewP
-							// } else {
-							// 	newPacket = false
-							// 	msg = append(msg, r.Next(remainingBytes)[:]...)
-							// 	// msg = bytes.Replace(msg, []byte("\n\t"), []byte(" "), -1)
-							// 	msg = spaces.ReplaceAll(msg, []byte{' '})
-							// 	// msg = []byte(stripchars(string(msg),
-							// 	// 	"\n\t"))
-							// 	remainingBytes = remainingBytes - n
-							// 	if msgBytes != nil {
-							// 		log.Debug("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))
-							// 	}
 						}
 					}
-					// case :
-					// 	fmt.Println("TODO")
-					// 	// c.rxReadyForQuery(r)
-					// 	remainingBytes = r.int32()
-					// 	remainingBytes = remainingBytes - 4
-					// 	if remainingBytes > 0 {
-					// 		if remainingBytes <= n {
-					// 			newPacket = true
-					// 			msg = msg + string(r.next(remainingBytes))
-					// 			remainingBytes = n - remainingBytes
-					// 			if msgCh != nil {
-					// msgCh <- 	fmt.Sprintf("3 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
-					// 			// fmt.Println(msg)
-					// 			goto NewP
-					// 		} else {
-					// 			newPacket = false
-					// 			msg = msg + string(r.next(remainingBytes))
-					// 			remainingBytes = remainingBytes - n
-					// 			if msgCh != nil {
-					// msgCh <- 	fmt.Sprintf("4 Remaining bytes: %d \tmsg: %s\n", remainingBytes, string(msg))}
-					// 		}
-					// 	}
-					// case rowDescription:
-					// case dataRow:
-					// case bindComplete:
-					// case commandComplete:
-					// 	commandTag = CommandTag(r.readCString())
-				// case 'Q', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'p', 'S', 'X':
-				default:
-					fmt.Println("6")
-					remainingBytes = 0
-					// if e := c.processContextFreeMsg(t, r); e != nil && softErr == nil {
-					// 	softErr = e
-					// }
+				case 'Q':
+					if !bytes.Contains(r, []byte("DEALLOCATE")) {
+						log.Debug("PostgreSQL pkg type: %s\n", string(t))
+						remainingBytes = r.Int32() - 4
+						r = r[:remainingBytes]
+						msgCh <- Pkg{
+							Type:    t,
+							Content: r,
+						}
+					}
 				}
-				remainingBytes = 0
-			} else {
-				fmt.Println("7")
-				remainingBytes = 0
 			}
-			// r = append(r, buff[:]...)
-
-			// fmt.Println("a")
-			// c := src
-			// c.reader = bufio.NewReader(src.conn)
-			// c.mr.reader = c.reader
-			//
-			// var t byte
-			// var r *msgReader
-			// fmt.Println("b")
-			// t, r, err := c.rxMsg()
-			// fmt.Println("c")
-			// if err != nil {
-			// 	fmt.Println(err)
-			// 	return
-			// }
-			// fmt.Println("d")
-			//
-			// if msgCh != nil {
-			// msgCh <- 	fmt.Sprintf("t: %#v\n", t)}
-
-			// n, err := src.Read(buff)
-			// if err != nil {
-			// 	p.err("Read failed '%s'\n", err)
-			// 	return
-			// }
-			// b := buff[:n]
-			// //show output
-			//
-			//
-			// b = getModifiedBuffer(b, powerCallback)
-			// n, err = dst.Write(b)
-			// //
-			// //write out result
-			// n, err = dst.Write(b)
-			// if err != nil {
-			// 	p.err("Write failed '%s'\n", err)
-			// 	return
-			// }
+			// fmt.Println("8")
 		}
 	} else {
 		for {
