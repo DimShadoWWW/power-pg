@@ -60,7 +60,7 @@ func GetVariables(in1, in2 string) string {
 					found := false
 					for x := idx; x <= len(i) && in1Splitted[x] != in2Splitted[x]; x++ {
 						count = x
-						result[idx] = "#XXXXXX#"
+						result[idx] = "XXXXXX"
 						if x < len(i) && in1Splitted[x+1] != in2Splitted[x+1] {
 							found = true
 						}
