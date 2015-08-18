@@ -39,7 +39,7 @@ func SplitString(s, sep string) (map[int]string, Series) {
 }
 
 // GetVariables compare two strings and return a new one with "XXXXXX" in variabled positions
-func GetVariables(in1, in2 string, context int) string {
+func GetVariables(in1, in2 string) string {
 	result := make(map[int]string)
 	offs := 0
 	in1Splitted, i := SplitString(in1, " ")
@@ -60,7 +60,7 @@ func GetVariables(in1, in2 string, context int) string {
 					found := false
 					for x := idx; x <= len(i) && in1Splitted[x] != in2Splitted[x]; x++ {
 						count = x
-						result[idx] = "XXXXXX"
+						result[idx] = "#XXXXXX#"
 						if x < len(i) && in1Splitted[x+1] != in2Splitted[x+1] {
 							found = true
 						}

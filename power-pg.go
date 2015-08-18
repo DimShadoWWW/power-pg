@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
+	"github.com/DimShadoWWW/power-pg/utils"
 	_ "github.com/lib/pq"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
@@ -45,13 +46,23 @@ type msgStruct struct {
 	Content string
 }
 
+type sqlStruct struct {
+	Completed bool
+	Printed   bool
+	Template  string
+	First     string
+	Count     int
+}
+
+type sqlStructList map[string]sqlStruct
+
 var (
 	run      = make(chan bool)
 	end      = make(chan bool)
 	msgs     = make(chan string)
 	msgBytes = make(chan []byte)
 	msgCh    = make(chan proxy.Pkg)
-	msgOut   = make(chan msgStruct)
+	msgOut   = make(chan msgStruct, 100)
 
 	db  *sql.DB
 	log = logging.MustGetLogger("")
@@ -265,18 +276,14 @@ func logReport() {
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
 	fname := ""
+	var sqlIndex sqlStructList
 	for msg := range msgOut {
-		// spew.Dump(msg)
-		// select {
-		// case msg1 := <-msgOut:
-		//
-		// spew.Dump(msg)
-		// log.Debug("msg := <-msgOut '%#v'\n", msg)
 		log.Debug("+")
 		switch msg.Type {
 		// New file
 		case "C":
 			log.Debug("CHANNEL")
+			sqlIndex = make(sqlStructList)
 			fname = fmt.Sprintf("%s/reports/report-%s.md", *baseDir, msg.Content)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
@@ -294,20 +301,89 @@ func logReport() {
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
-			// log.Debug("SQL: %s", fmt.Sprintf("\n```sql\n%s\n```\n", string(m)))
-			m1 := []byte("\n```sql\n")
-			m1 = append(m1, m[:]...)
-			m1 = append(m1, []byte("\n```\n")[:]...)
-			// spew.Dump(m1)
-			// spew.Dump(f)
+			sqlIdx := string(m[:20])
+			log.Info("m %s\n", string(m))
+			log.Info("sqlIdx %s\n", string(sqlIdx))
+			for index, _ := range sqlIndex {
+				fmt.Printf("%s : '%v'\n", index, sqlIndex[index].Printed)
+			}
+			if val, ok := sqlIndex[sqlIdx]; ok {
+				log.Info("Exists")
+				log.Info("sqlIndex[sqlIdx] %#s\n", sqlIndex[sqlIdx])
+
+				// if val.Completed  {
+				// 	m = []byte(val.Template)
+				// } else {
+				if !sqlIndex[sqlIdx].Completed && sqlIndex[sqlIdx].First != "" {
+					log.Info("Not completed")
+					sqlIndex[sqlIdx] = sqlStruct{
+						First:     sqlIndex[sqlIdx].First,
+						Completed: true,
+						Printed:   false,
+						Template:  utils.GetVariables(string(m), val.First),
+						Count:     1,
+					}
+				} else {
+					sqlIndex[sqlIdx] = sqlStruct{
+						First:     sqlIndex[sqlIdx].First,
+						Completed: true,
+						Printed:   false,
+						Template:  sqlIndex[sqlIdx].Template,
+						Count:     sqlIndex[sqlIdx].Count + 1,
+					}
+				}
+			} else {
+				log.Info("Not exists")
+				sqlIndex[sqlIdx] = sqlStruct{
+					First:     string(m),
+					Completed: false,
+					Count:     0,
+					Printed:   false,
+				}
+			}
+			if sqlIndex[sqlIdx].Count <= 2 {
+				var m1 = []byte("\n```sql\n")
+				log.Info("Count %d", sqlIndex[sqlIdx].Count)
+				if sqlIndex[sqlIdx].Completed && !sqlIndex[sqlIdx].Printed && sqlIndex[sqlIdx].Count == 2 {
+					log.Info("Count %d == 2", sqlIndex[sqlIdx].Count)
+					// log.Info("1")
+					// go func() {
+					// }()
+					m1 = append(m1, []byte(sqlIndex[sqlIdx].Template)[:]...)
+					m1 = append(m1, []byte("\n```\n")[:]...)
+					log.Info("2")
+					sqlIndex[sqlIdx] = sqlStruct{
+						Count:     3,
+						Printed:   true,
+						Completed: true,
+					}
+					log.Info("3")
+					// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+					msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" + `> $\uparrow$ Esto es una plantilla que se repite` + "\n\n"}
+				} else {
+					m1 = append(m1, m[:]...)
+					m1 = append(m1, []byte("\n```\n")[:]...)
+					f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+					_, err = f.Write(m1)
+					if err != nil {
+						log.Fatalf("log failed: %v", err)
+					}
+					f.Close()
+					log.Info("Printed")
+				}
+			}
+
+			// SQL template
+		case "BM":
+			log.Debug("SQL template")
+
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-			_, err = f.Write(m1)
-			// log.Debug("3 SQL")
+			_, err = f.Write([]byte(msg.Content))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
 			f.Close()
-			// log.Debug("4 SQL")
+			log.Info("Printed")
 
 			// Output
 		case "O":
@@ -324,7 +400,7 @@ func logReport() {
 
 			// Block comment
 		case "B":
-			log.Debug("BOCK")
+			log.Debug("BLOCK")
 			m1 := []byte("> ")
 			m1 = append(m1, msg.Content[:]...)
 			m1 = append(m1, []byte("\n\n")[:]...)

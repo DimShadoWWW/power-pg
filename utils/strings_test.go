@@ -37,9 +37,9 @@ func TestGetVariables(t *testing.T) {
 		{"Hello, 0 world", "Hello, 2 world", "Hello, XXXXXX world"},
 	}
 	for _, c := range cases {
-		got := GetVariables(c.in1, c.in2, 2)
+		got := GetVariables(c.in1, c.in2)
 		if got != c.want {
-			t.Errorf("GetVariables(\n%q, \n%q, 2) == \n%q\n, want \n%q", c.in1, c.in2, got, c.want)
+			t.Errorf("GetVariables(\n%q, \n%q) == \n%q\n, want \n%q", c.in1, c.in2, got, c.want)
 		}
 	}
 }
