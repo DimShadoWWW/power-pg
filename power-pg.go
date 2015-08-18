@@ -342,7 +342,7 @@ func logReport() {
 				}
 			}
 			if sqlIndex[sqlIdx].Count <= 2 {
-				var m1 = []byte("\n```sql\n")
+				var m1 = []byte("\n```sql,morekeywords={XXXXXX},keywordstyle=\\color{green},\n")
 				log.Info("Count %d", sqlIndex[sqlIdx].Count)
 				if sqlIndex[sqlIdx].Completed && !sqlIndex[sqlIdx].Printed && sqlIndex[sqlIdx].Count == 2 {
 					log.Info("Count %d == 2", sqlIndex[sqlIdx].Count)
