@@ -18,7 +18,10 @@ import (
 
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
+	"github.com/deckarep/golang-set"
 	_ "github.com/lib/pq"
+	"github.com/lunny/nodb"
+	"github.com/lunny/nodb/config"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/yosssi/gohtml"
@@ -271,19 +274,38 @@ func baseLog() {
 
 func logReport() {
 	// var f *os.File
+	//
 
 	spaces := regexp.MustCompile("[ \t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
 	fname := ""
-	var sqlIndex sqlStructList
+	// var sqlIndex sqlStructList
+
+	var db *nodb.DB
+	var idx int64
+
 	for msg := range msgOut {
 		log.Debug("+")
 		switch msg.Type {
 		// New file
 		case "C":
 			log.Debug("CHANNEL")
-			sqlIndex = make(sqlStructList)
+
+			dbTempPath := fmt.Sprintf("%s/db/%s/", *baseDir, msg.Content)
+			if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+				err = os.MkdirAll(dbTempPath, 0777)
+			}
+			cfg := new(config.Config)
+			cfg.DataDir = dbTempPath
+			dbs, err := nodb.Open(cfg)
+			if err != nil {
+				fmt.Printf("nodb: error opening db: %v", err)
+			}
+
+			db, _ = dbs.Select(0)
+
+			// sqlIndex = make(sqlStructList)
 			fname = fmt.Sprintf("%s/reports/report-%s.md", *baseDir, msg.Content)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
@@ -295,90 +317,57 @@ func logReport() {
 				log.Fatalf("log failed: %v", err)
 			}
 			f.Close()
+			idx = 0
 
-			// SQL Query
+			// receive SQL Query
 		case "M":
-			log.Debug("SQL")
+			log.Debug("Receiving SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
-			sqlIdx := string(m[:20])
-			log.Info("m %s\n", string(m))
-			log.Info("sqlIdx %s\n", string(sqlIdx))
-			for index, _ := range sqlIndex {
-				fmt.Printf("%s : '%v'\n", index, sqlIndex[index].Printed)
-			}
-			if val, ok := sqlIndex[sqlIdx]; ok {
-				log.Info("Exists")
-				log.Info("sqlIndex[sqlIdx] %#s\n", sqlIndex[sqlIdx])
+			sqlIdx := m[:20]
+			qKey := append([]byte("queries/%s"), sqlIdx[:]...)
+			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
+			// log.Info("m %s\n", string(m))
+			// log.Info("sqlIdx %s\n", string(sqlIdx))
 
-				// if val.Completed  {
-				// 	m = []byte(val.Template)
-				// } else {
-				if !sqlIndex[sqlIdx].Completed && sqlIndex[sqlIdx].First != "" {
-					log.Info("Not completed")
-					sqlIndex[sqlIdx] = sqlStruct{
-						First:     sqlIndex[sqlIdx].First,
-						Completed: true,
-						Printed:   false,
-						Template:  utils.GetVariables(string(m), val.First),
-						Count:     1,
-					}
-				} else {
-					sqlIndex[sqlIdx] = sqlStruct{
-						First:     sqlIndex[sqlIdx].First,
-						Completed: true,
-						Printed:   false,
-						Template:  sqlIndex[sqlIdx].Template,
-						Count:     sqlIndex[sqlIdx].Count + 1,
-					}
-				}
-			} else {
-				log.Info("Not exists")
-				sqlIndex[sqlIdx] = sqlStruct{
-					First:     string(m),
-					Completed: false,
-					Count:     0,
-					Printed:   false,
-				}
+			// append query's string in "index"
+			_, err := db.LPush([]byte("index"), []byte(m))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
 			}
-			if sqlIndex[sqlIdx].Count <= 2 {
-				var m1 = []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
-				log.Info("Count %d", sqlIndex[sqlIdx].Count)
-				if sqlIndex[sqlIdx].Completed && !sqlIndex[sqlIdx].Printed && sqlIndex[sqlIdx].Count == 2 {
-					log.Info("Count %d == 2", sqlIndex[sqlIdx].Count)
-					// log.Info("1")
-					// go func() {
-					// }()
-					m1 = append(m1, []byte(sqlIndex[sqlIdx].Template)[:]...)
-					m1 = append(m1, []byte("\n```\n")[:]...)
-					log.Info("2")
-					sqlIndex[sqlIdx] = sqlStruct{
-						Count:     3,
-						Printed:   true,
-						Completed: true,
-					}
-					log.Info("3")
-					// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-					msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" + `> $\uparrow$ Esto es una plantilla que se repite` + "\n\n"}
-				} else {
-					m1 = append(m1, m[:]...)
-					m1 = append(m1, []byte("\n```\n")[:]...)
-					f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-					_, err = f.Write(m1)
-					if err != nil {
-						log.Fatalf("log failed: %v", err)
-					}
-					f.Close()
-					log.Info("Printed")
-				}
+
+			// append query string into query's minized "key"
+			_, err = db.LPush(qKey, []byte(m))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
 			}
+
+			// SQL Query
+		case "S":
+			log.Debug("SQL")
+			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
+			idx++
+
+			var m1 = []byte(fmt.Sprintf("\n### %d\n", idx) +
+				"\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+			m1 = append(m1, m[:]...)
+			m1 = append(m1, []byte("\n```\n")[:]...)
+			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			_, err = f.Write(m1)
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			}
+			f.Close()
+			log.Info("Printed")
 
 			// SQL template
 		case "BM":
 			log.Debug("SQL template")
 
+			idx++
+			msg := append([]byte(fmt.Sprintf("\n### %d\n", idx)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-			_, err = f.Write([]byte(msg.Content))
+			_, err = f.Write(msg)
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
@@ -387,6 +376,61 @@ func logReport() {
 
 			// Output
 		case "O":
+			// Generate
+			included := mapset.NewSet()
+
+			for m := []byte{}; m != nil; m, _ = db.RPop([]byte("index")) {
+				sqlIdx := m[:20]
+				if !included.Contains(sqlIdx) {
+					// no yet printed
+					qKey := append([]byte("queries/%s"), sqlIdx[:]...)
+
+					// append query string into query's minized "key"
+					llen, err := db.LLen(qKey)
+					if err != nil {
+						log.Fatalf("log failed: %v", err)
+					}
+
+					if llen > 1 {
+						// Template -> create template and useit
+
+						// first value
+						q1, err := db.RPop(qKey)
+						if err != nil {
+							log.Fatalf("failed to get q1: %v", err)
+						}
+
+						// last value
+						q2, err := db.RPop(qKey)
+						if err != nil {
+							log.Fatalf("failed to get q2: %v", err)
+						}
+
+						// generate template comparing first and last values
+						template := utils.GetVariables(string(q1), string(q2))
+
+						m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+						m1 = append(m1, []byte(template)[:]...)
+						m1 = append(m1, []byte("\n```\n")[:]...)
+						// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+						msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
+							`> $\uparrow$ Esto es una plantilla que se repite, 2 ejemplos:` +
+							"\n>```sql\n" +
+							string(q1) + "\n" + string(q2) +
+							"\n```\n\n"}
+
+					} else {
+						// only one -> print
+						q, err := db.RPop(qKey)
+						if err != nil {
+							log.Fatalf("failed to get q1: %v", err)
+						}
+						msgOut <- msgStruct{Type: "S", Content: string(q)}
+					}
+					included.Add(sqlIdx)
+				}
+			}
+
 			log.Debug("RESULT")
 			m1 := []byte("\n```xml\n")
 			m1 = append(m1, msg.Content[:]...)
