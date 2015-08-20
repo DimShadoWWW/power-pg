@@ -373,7 +373,6 @@ func logReport() {
 			}
 			f.Close()
 			log.Info("Printed")
-
 			// Output
 		case "O":
 			// Generate
@@ -430,7 +429,10 @@ func logReport() {
 					included.Add(sqlIdx)
 				}
 			}
+			msgOut <- msgStruct{Type: "E", Content: msg.Content}
 
+			// Output
+		case "E":
 			log.Debug("RESULT")
 			m1 := []byte("\n```xml\n")
 			m1 = append(m1, msg.Content[:]...)
