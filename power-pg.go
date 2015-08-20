@@ -373,8 +373,10 @@ func logReport() {
 			}
 			f.Close()
 			log.Info("Printed")
+
 			// Output
 		case "O":
+			log.Debug("Output")
 			// Generate
 			included := mapset.NewSet()
 
