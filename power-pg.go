@@ -380,55 +380,67 @@ func logReport() {
 			// Generate
 			included := mapset.NewSet()
 
-			for m := []byte{}; m != nil; m, _ = db.RPop([]byte("index")) {
-				sqlIdx := m[:20]
-				if !included.Contains(sqlIdx) {
-					// no yet printed
-					qKey := append([]byte("queries/%s"), sqlIdx[:]...)
+			llen, err := db.LLen([]byte("index"))
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			} else {
+				t, err := db.Get([]byte("index"))
+				if err != nil {
+					log.Fatalf("log failed: %v", err)
+				}
+				log.Debug("index size: %d\nindex content: %#v\n", llen, t)
+			}
+			if llen > 0 {
+				for m := []byte{}; m != nil; m, _ = db.RPop([]byte("index")) {
+					sqlIdx := m[:20]
+					if !included.Contains(sqlIdx) {
+						// no yet printed
+						qKey := append([]byte("queries/%s"), sqlIdx[:]...)
 
-					// append query string into query's minized "key"
-					llen, err := db.LLen(qKey)
-					if err != nil {
-						log.Fatalf("log failed: %v", err)
+						// append query string into query's minized "key"
+						llen, err := db.LLen(qKey)
+						if err != nil {
+							log.Fatalf("log failed: %v", err)
+						}
+
+						if llen > 1 {
+							// Template -> create template and useit
+
+							// first value
+							q1, err := db.RPop(qKey)
+							if err != nil {
+								log.Fatalf("failed to get q1: %v", err)
+							}
+
+							// last value
+							q2, err := db.RPop(qKey)
+							if err != nil {
+								log.Fatalf("failed to get q2: %v", err)
+							}
+
+							// generate template comparing first and last values
+							template := utils.GetVariables(string(q1), string(q2))
+
+							m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+							m1 = append(m1, []byte(template)[:]...)
+							m1 = append(m1, []byte("\n```\n")[:]...)
+							// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+							msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
+								`> $\uparrow$ Esto es una plantilla que se repite, 2 ejemplos:` +
+								"\n>```sql\n" +
+								string(q1) + "\n" + string(q2) +
+								"\n```\n\n"}
+
+						} else {
+							// only one -> print
+							q, err := db.RPop(qKey)
+							if err != nil {
+								log.Fatalf("failed to get q1: %v", err)
+							}
+							msgOut <- msgStruct{Type: "S", Content: string(q)}
+						}
+						included.Add(sqlIdx)
 					}
-
-					if llen > 1 {
-						// Template -> create template and useit
-
-						// first value
-						q1, err := db.RPop(qKey)
-						if err != nil {
-							log.Fatalf("failed to get q1: %v", err)
-						}
-
-						// last value
-						q2, err := db.RPop(qKey)
-						if err != nil {
-							log.Fatalf("failed to get q2: %v", err)
-						}
-
-						// generate template comparing first and last values
-						template := utils.GetVariables(string(q1), string(q2))
-
-						m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
-						m1 = append(m1, []byte(template)[:]...)
-						m1 = append(m1, []byte("\n```\n")[:]...)
-						// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-						msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
-							`> $\uparrow$ Esto es una plantilla que se repite, 2 ejemplos:` +
-							"\n>```sql\n" +
-							string(q1) + "\n" + string(q2) +
-							"\n```\n\n"}
-
-					} else {
-						// only one -> print
-						q, err := db.RPop(qKey)
-						if err != nil {
-							log.Fatalf("failed to get q1: %v", err)
-						}
-						msgOut <- msgStruct{Type: "S", Content: string(q)}
-					}
-					included.Add(sqlIdx)
 				}
 			}
 			msgOut <- msgStruct{Type: "E", Content: msg.Content}
