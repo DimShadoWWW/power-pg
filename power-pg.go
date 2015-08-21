@@ -322,6 +322,7 @@ func logReport() {
 			// receive SQL Query
 		case "M":
 			log.Debug("Receiving SQL")
+			log.Info("0")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
 			sqlIdx := m[:20]
@@ -329,18 +330,20 @@ func logReport() {
 			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
 			// log.Info("m %s\n", string(m))
 			// log.Info("sqlIdx %s\n", string(sqlIdx))
-
+			log.Info("1")
 			// append query's string in "index"
 			_, err := db.LPush([]byte("index"), []byte(m))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
-
+			log.Info("2")
 			// append query string into query's minized "key"
 			_, err = db.LPush(qKey, []byte(m))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
+			log.Info("3")
+			// db.FlushAll()
 
 			// SQL Query
 		case "S":
@@ -383,15 +386,24 @@ func logReport() {
 			llen, err := db.LLen([]byte("index"))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
-			} else {
-				t, err := db.Get([]byte("index"))
-				if err != nil {
-					log.Fatalf("log failed: %v", err)
-				}
-				log.Debug("index size: %d\nindex content: %#v\n", llen, t)
+				// } else {
+				// 	t, err := db.Get([]byte("index"))
+				// 	if err != nil {
+				// 		log.Fatalf("log failed: %v", err)
+				// 	}
+				// 	log.Debug("index size: %d\nindex content: %#v\n", llen, t)
 			}
+			log.Warning("LEN: %d\n", llen)
 			if llen > 0 {
-				for m := []byte{}; m != nil; m, _ = db.RPop([]byte("index")) {
+				for pos := int32(0); pos < int32(llen); pos++ {
+					// for m := []byte{}; m != nil; m, err = db.RPop([]byte("index")) {
+					m, err := db.LIndex([]byte("index"), pos)
+					if err != nil {
+						log.Fatalf("log failed: %v", err)
+					}
+
+					log.Warning("m: %#v\n", m)
+					log.Warning("err: %#v\n", err)
 					sqlIdx := m[:20]
 					if !included.Contains(sqlIdx) {
 						// no yet printed
