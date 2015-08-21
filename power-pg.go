@@ -352,7 +352,7 @@ func logReport() {
 			idx++
 
 			var m1 = []byte(fmt.Sprintf("\n### %d\n", idx) +
-				"\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+				"\n***\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
@@ -368,7 +368,7 @@ func logReport() {
 			log.Debug("SQL template")
 
 			idx++
-			msg := append([]byte(fmt.Sprintf("\n### %d\n", idx)), []byte(msg.Content)[:]...)
+			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", idx)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			_, err = f.Write(msg)
 			if err != nil {
