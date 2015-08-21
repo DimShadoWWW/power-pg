@@ -426,15 +426,15 @@ func logReport() {
 							// generate template comparing first and last values
 							template := utils.GetVariables(string(q1), string(q2))
 
-							m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+							m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
 							m1 = append(m1, []byte(template)[:]...)
 							m1 = append(m1, []byte("\n```\n")[:]...)
 							// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
 							msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
 								`> $\uparrow$ Esto es una plantilla que se repite` +
-								"\n\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n" +
+								"\n" + `Ejemplos:\\\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
 								string(q1) + "\n" + string(q2) +
-								"\n```\n" + `\caption{Ejemplos}\label{` + string(sqlIdx) + `}\end{minipage}` + "\n\n"}
+								"\n```\n" + `\end{minipage}` + "\n\n"}
 
 						} else {
 							// only one -> print
