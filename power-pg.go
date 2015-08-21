@@ -431,10 +431,10 @@ func logReport() {
 							m1 = append(m1, []byte("\n```\n")[:]...)
 							// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
 							msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
-								`> $\uparrow$ Esto es una plantilla que se repite, 2 ejemplos:` +
-								"\n>```sql\n" +
+								`> $\uparrow$ Esto es una plantilla que se repite` +
+								"\n\nbase()" + `\begin{minipage}[c]{\textwidth}` + "\n" +
 								string(q1) + "\n" + string(q2) +
-								"\n```\n\n"}
+								"\n" + `\caption{Ejemplos}\label{` + string(sqlIdx) + `}\end{minipage}` + "\n\n"}
 
 						} else {
 							// only one -> print
