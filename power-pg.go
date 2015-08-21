@@ -276,7 +276,7 @@ func logReport() {
 	// var f *os.File
 	//
 
-	spaces := regexp.MustCompile("[ \t\n]+")
+	spaces := regexp.MustCompile("[ \r\t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
 	multipleSpaces := regexp.MustCompile("    ")
 	fname := ""
@@ -325,7 +325,7 @@ func logReport() {
 			log.Info("0")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
-			sqlIdx := m[:20]
+			sqlIdx := m[:30]
 			qKey := append([]byte("queries/%s"), sqlIdx[:]...)
 			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
 			// log.Info("m %s\n", string(m))
@@ -382,30 +382,23 @@ func logReport() {
 			log.Debug("Output")
 			// Generate
 			included := mapset.NewSet()
-
+			log.Warning("msg.Content: %s\n", msg.Content)
 			llen, err := db.LLen([]byte("index"))
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
-				// } else {
-				// 	t, err := db.Get([]byte("index"))
-				// 	if err != nil {
-				// 		log.Fatalf("log failed: %v", err)
-				// 	}
-				// 	log.Debug("index size: %d\nindex content: %#v\n", llen, t)
 			}
 			log.Warning("LEN: %d\n", llen)
 			if llen > 0 {
 				for pos := int32(0); pos < int32(llen); pos++ {
-					// for m := []byte{}; m != nil; m, err = db.RPop([]byte("index")) {
 					m, err := db.LIndex([]byte("index"), pos)
 					if err != nil {
 						log.Fatalf("log failed: %v", err)
 					}
 
-					log.Warning("m: %#v\n", m)
-					log.Warning("err: %#v\n", err)
-					sqlIdx := m[:20]
-					if !included.Contains(sqlIdx) {
+					log.Warning("m: %s\n", string(m))
+					// log.Warning("err: %#v\n", err)
+					sqlIdx := m[:30]
+					if !included.Contains(string(sqlIdx)) {
 						// no yet printed
 						qKey := append([]byte("queries/%s"), sqlIdx[:]...)
 
@@ -451,7 +444,8 @@ func logReport() {
 							}
 							msgOut <- msgStruct{Type: "S", Content: string(q)}
 						}
-						included.Add(sqlIdx)
+						log.Warning("sqlIdx: %#v", string(sqlIdx))
+						included.Add(string(sqlIdx))
 					}
 				}
 			}
