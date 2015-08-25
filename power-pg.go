@@ -73,6 +73,7 @@ var (
 )
 
 func main() {
+	defer chownDir()
 	flag.Parse()
 
 	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
