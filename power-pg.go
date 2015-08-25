@@ -90,7 +90,7 @@ func main() {
 		defer chownDir(dbTempPath, 1000, 1000)
 	}
 
-	db, err := bolt.Open(dbTempPath+"/dynfeed.db", 0600, nil)
+	db, err = bolt.Open(dbTempPath+"/dynfeed.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
