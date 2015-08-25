@@ -79,7 +79,8 @@ func main() {
 	defer chownDir(fmt.Sprintf("%s/reports/", *baseDir), 1000, 1000)
 
 	dbTempPath := "/db"
-	if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
+	_, err := os.Stat(dbTempPath)
+	if os.IsNotExist(err) {
 		dbTempPath = fmt.Sprintf("%s/db", *baseDir)
 		if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
 			err = os.MkdirAll(dbTempPath, 0777)
