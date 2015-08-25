@@ -375,30 +375,35 @@ func logReport() {
 			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
 			// log.Info("m %s\n", string(m))
 			// log.Info("sqlIdx %s\n", string(sqlIdx))
-			log.Info("1")
 			// append query's string in "index"
+			log.Info("0")
 			db.Update(func(tx *bolt.Tx) error {
+				log.Info("1")
 				b, err := tx.CreateBucketIfNotExists([]byte(channel))
 				if err != nil {
 					return fmt.Errorf("create bucket: %s", err)
 				}
+				log.Info("2")
 				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+				log.Info("3")
 				err = b1.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
-				log.Info("2")
+				log.Info("4")
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+				log.Info("5")
 				err = b2.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+				log.Info("6")
 				return nil
 			})
 			// _, err := db.LPush([]byte("index"), []byte(m))
