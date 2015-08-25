@@ -389,7 +389,7 @@ func logReport() {
 				}
 				log.Info("2")
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
-				err = b1.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
+				err = b2.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
