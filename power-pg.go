@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"mime"
 	"net"
 	"net/http"
@@ -99,6 +100,25 @@ func main() {
 	time.Sleep(time.Second * 3)
 	run <- true
 	proxy.Start(localHost, dbHostname, dbPort, msgBytes, msgCh, *recreate, log)
+}
+
+func chownDir(path string, uid int, gid int) {
+	entries, err := ioutil.ReadDir(path)
+
+	for _, entry := range entries {
+		sfp := path + "/" + entry.Name()
+		if entry.IsDir() {
+			chownDir(sfp, uid, gid)
+		} else {
+			// perform copy
+			err = os.Chown(sfp, uid, gid)
+			// os.Chmod(sfp, 0644)
+			if err != nil {
+				log.Warning(err.Error())
+			}
+		}
+	}
+	return
 }
 
 func getQueryModificada(queryOriginal string) string {
