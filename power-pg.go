@@ -377,7 +377,7 @@ func logReport() {
 			// log.Info("sqlIdx %s\n", string(sqlIdx))
 			// append query's string in "index"
 			log.Info("0")
-			db.Update(func(tx *bolt.Tx) error {
+			err := db.Update(func(tx *bolt.Tx) error {
 				log.Info("1")
 				b, err := tx.CreateBucketIfNotExists([]byte(channel))
 				if err != nil {
@@ -406,6 +406,9 @@ func logReport() {
 				log.Info("6")
 				return nil
 			})
+			if err != nil {
+				log.Fatal("Failed to db: %s", err)
+			}
 			// _, err := db.LPush([]byte("index"), []byte(m))
 			// if err != nil {
 			// 	log.Fatalf("log failed: %v", err)
@@ -455,7 +458,7 @@ func logReport() {
 			included := mapset.NewSet()
 			log.Warning("msg.Content: %s\n", msg.Content)
 
-			db.View(func(tx *bolt.Tx) error {
+			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 
 				b1 := b.Bucket([]byte("queries"))
@@ -504,6 +507,10 @@ func logReport() {
 				}
 				return nil
 			})
+
+			if err != nil {
+				log.Fatal("Failed to db: %s", err)
+			}
 			msgOut <- msgStruct{Type: "E", Content: msg.Content}
 
 			// Output
