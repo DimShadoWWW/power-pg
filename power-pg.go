@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"database/sql"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,15 +13,17 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/deckarep/golang-set"
-	_ "github.com/lib/pq"
-	"github.com/lunny/nodb"
-	"github.com/lunny/nodb/config"
+	// _ "github.com/lib/pq"
+	// "github.com/lunny/nodb"
+	// "github.com/lunny/nodb/config"
+	"github.com/boltdb/bolt"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/yosssi/gohtml"
@@ -33,6 +34,8 @@ import (
 // log "github.com/Sirupsen/logrus"
 
 var (
+	db *bolt.DB
+
 	baseDir       = flag.String("b", "/", "directorio base para archivos")
 	localHost     = flag.String("l", ":5432", "puerto local para escuchar")
 	dbHostname    = flag.String("h", "localhost", "hostname del servidor PostgreSQL")
@@ -47,6 +50,7 @@ var (
 
 type msgStruct struct {
 	Type    string
+	ID      int64
 	Content string
 }
 
@@ -68,12 +72,30 @@ var (
 	msgCh    = make(chan proxy.Pkg)
 	msgOut   = make(chan msgStruct, 100)
 
-	db  *sql.DB
 	log = logging.MustGetLogger("")
 )
 
 func main() {
 	defer chownDir(fmt.Sprintf("%s/reports/", *baseDir), 1000, 1000)
+
+	dbTempPath := "/db"
+	if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
+		dbTempPath = fmt.Sprintf("%s/db", *baseDir)
+		if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
+			err = os.MkdirAll(dbTempPath, 0777)
+		}
+	}
+
+	if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
+		defer chownDir(dbTempPath, 1000, 1000)
+	}
+
+	db, err := bolt.Open(dbTempPath+"/dynfeed.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	flag.Parse()
 
 	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
@@ -303,8 +325,8 @@ func logReport() {
 	fname := ""
 	// var sqlIndex sqlStructList
 
-	var db *nodb.DB
 	var idx int64
+	channel := ""
 
 	for msg := range msgOut {
 		log.Debug("+")
@@ -312,19 +334,20 @@ func logReport() {
 		// New file
 		case "C":
 			log.Debug("CHANNEL")
-
-			dbTempPath := fmt.Sprintf("%s/db/%s/", *baseDir, msg.Content)
-			if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
-				err = os.MkdirAll(dbTempPath, 0777)
-			}
-			cfg := new(config.Config)
-			cfg.DataDir = dbTempPath
-			dbs, err := nodb.Open(cfg)
-			if err != nil {
-				fmt.Printf("nodb: error opening db: %v", err)
-			}
-
-			db, _ = dbs.Select(0)
+			channel = msg.Content
+			//
+			// dbTempPath := fmt.Sprintf("%s/db/%s/", *baseDir, msg.Content)
+			// if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
+			// 	err = os.MkdirAll(dbTempPath, 0777)
+			// }
+			// cfg := new(config.Config)
+			// cfg.DataDir = dbTempPath
+			// dbs, err := nodb.Open(cfg)
+			// if err != nil {
+			// 	fmt.Printf("nodb: error opening db: %v", err)
+			// }
+			//
+			// db, _ = dbs.Select(0)
 
 			// sqlIndex = make(sqlStructList)
 			fname = fmt.Sprintf("%s/reports/report-%s.md", *baseDir, msg.Content)
@@ -344,25 +367,43 @@ func logReport() {
 		case "M":
 			log.Debug("Receiving SQL")
 			log.Info("0")
+			idx++
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
 			sqlIdx := m[:30]
-			qKey := append([]byte("queries/%s"), sqlIdx[:]...)
+			// qKey := append([]byte("queries/%s"), sqlIdx[:]...)
 			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
 			// log.Info("m %s\n", string(m))
 			// log.Info("sqlIdx %s\n", string(sqlIdx))
 			log.Info("1")
 			// append query's string in "index"
-			_, err := db.LPush([]byte("index"), []byte(m))
-			if err != nil {
-				log.Fatalf("log failed: %v", err)
-			}
-			log.Info("2")
-			// append query string into query's minized "key"
-			_, err = db.LPush(qKey, []byte(m))
-			if err != nil {
-				log.Fatalf("log failed: %v", err)
-			}
+			db.Update(func(tx *bolt.Tx) error {
+				b, err := tx.CreateBucketIfNotExists([]byte(channel))
+				if err != nil {
+					return fmt.Errorf("create bucket: %s", err)
+				}
+				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
+				err = b1.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
+				if err != nil {
+					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
+				}
+				log.Info("2")
+				b2, err := b.CreateBucketIfNotExists(sqlIdx)
+				err = b1.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
+				if err != nil {
+					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
+				}
+				return nil
+			})
+			// _, err := db.LPush([]byte("index"), []byte(m))
+			// if err != nil {
+			// 	log.Fatalf("log failed: %v", err)
+			// }
+			// // append query string into query's minized "key"
+			// _, err = db.LPush(qKey, []byte(m))
+			// if err != nil {
+			// 	log.Fatalf("log failed: %v", err)
+			// }
 			log.Info("3")
 			// db.FlushAll()
 
@@ -370,7 +411,6 @@ func logReport() {
 		case "S":
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
-			idx++
 
 			var m1 = []byte(fmt.Sprintf("\n### %d\n", idx) +
 				"\n***\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
@@ -388,7 +428,6 @@ func logReport() {
 		case "BM":
 			log.Debug("SQL template")
 
-			idx++
 			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", idx)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			_, err = f.Write(msg)
@@ -404,72 +443,56 @@ func logReport() {
 			// Generate
 			included := mapset.NewSet()
 			log.Warning("msg.Content: %s\n", msg.Content)
-			llen, err := db.LLen([]byte("index"))
-			if err != nil {
-				log.Fatalf("log failed: %v", err)
-			}
-			log.Warning("LEN: %d\n", llen)
-			if llen > 0 {
-				for pos := int32(0); pos < int32(llen); pos++ {
-					m, err := db.LIndex([]byte("index"), pos)
-					if err != nil {
-						log.Fatalf("log failed: %v", err)
-					}
 
-					log.Warning("m: %s\n", string(m))
-					// log.Warning("err: %#v\n", err)
-					sqlIdx := m[:30]
-					if !included.Contains(string(sqlIdx)) {
-						// no yet printed
-						qKey := append([]byte("queries/%s"), sqlIdx[:]...)
+			db.View(func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(channel))
 
-						// append query string into query's minized "key"
-						llen, err := db.LLen(qKey)
-						if err != nil {
-							log.Fatalf("log failed: %v", err)
+				b1 := b.Bucket([]byte("queries"))
+				if b1 != nil {
+					c := b1.Cursor()
+					for k, v := c.First(); k != nil; k, v = c.Next() {
+						sqlIdx := v[:30]
+
+						fmt.Printf("key=%s, value=%s\n", k, v)
+						b2 := b.Bucket(sqlIdx)
+						if b2 != nil {
+							// has many
+							if b2.Stats().KeyN > 1 {
+								if !included.Contains(string(sqlIdx)) {
+									c1 := b2.Cursor()
+									_, q1 := c1.First()
+									_, q2 := c1.Last()
+
+									// generate template comparing first and last values
+									template := utils.GetVariables(string(q1), string(q2))
+
+									m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+									m1 = append(m1, []byte(template)[:]...)
+									m1 = append(m1, []byte("\n```\n")[:]...)
+									// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+									if s, err := strconv.ParseInt(string(k), 10, 64); err == nil {
+										msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
+											`> $\uparrow$ Esto es una plantilla que se repite` +
+											"\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
+											string(q1) + "\n" + string(q2) +
+											"\n```\n" + `\end{minipage}` + "\n\n"}
+									} else {
+										log.Fatalf("failed to convert str to int64: %v", err)
+									}
+								}
+							} else {
+								if s, err := strconv.ParseInt(string(k), 10, 64); err == nil {
+									msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
+								} else {
+									log.Fatalf("failed to convert str to int64: %v", err)
+								}
+							}
 						}
-
-						if llen > 1 {
-							// Template -> create template and useit
-
-							// first value
-							q1, err := db.RPop(qKey)
-							if err != nil {
-								log.Fatalf("failed to get q1: %v", err)
-							}
-
-							// last value
-							q2, err := db.RPop(qKey)
-							if err != nil {
-								log.Fatalf("failed to get q2: %v", err)
-							}
-
-							// generate template comparing first and last values
-							template := utils.GetVariables(string(q1), string(q2))
-
-							m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
-							m1 = append(m1, []byte(template)[:]...)
-							m1 = append(m1, []byte("\n```\n")[:]...)
-							// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-							msgOut <- msgStruct{Type: "BM", Content: string(m1) + "\n\n" +
-								`> $\uparrow$ Esto es una plantilla que se repite` +
-								"\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
-								string(q1) + "\n" + string(q2) +
-								"\n```\n" + `\end{minipage}` + "\n\n"}
-
-						} else {
-							// only one -> print
-							q, err := db.RPop(qKey)
-							if err != nil {
-								log.Fatalf("failed to get q1: %v", err)
-							}
-							msgOut <- msgStruct{Type: "S", Content: string(q)}
-						}
-						log.Warning("sqlIdx: %#v", string(sqlIdx))
 						included.Add(string(sqlIdx))
 					}
 				}
-			}
+				return nil
+			})
 			msgOut <- msgStruct{Type: "E", Content: msg.Content}
 
 			// Output
