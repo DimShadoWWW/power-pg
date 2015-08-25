@@ -390,7 +390,7 @@ func logReport() {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
 				log.Info("3")
-				err = b1.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
+				err = b1.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
@@ -400,7 +400,7 @@ func logReport() {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
 				log.Info("5")
-				err = b2.Put([]byte(fmt.Sprintf("%5d", idx)), []byte(m))
+				err = b2.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
