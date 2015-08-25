@@ -73,7 +73,7 @@ var (
 )
 
 func main() {
-	defer chownDir()
+	defer chownDir(fmt.Sprintf("%s/reports/", *baseDir), 1000, 1000)
 	flag.Parse()
 
 	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
