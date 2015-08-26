@@ -382,33 +382,38 @@ func logReport() {
 				log.Info("1")
 				b, err := tx.CreateBucketIfNotExists([]byte(channel))
 				if err != nil {
+					log.Warning("create bucket: %s", err)
 					return fmt.Errorf("create bucket: %s", err)
 				}
 				log.Info("2")
 				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
 				if err != nil {
-					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
+					log.Warning("failed to create bucket queries\n")
+					return fmt.Errorf("failed to create bucket queries\n")
 				}
 				log.Info("3")
 				err = b1.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
+					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
 				log.Info("4")
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
 				if err != nil {
-					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
+					log.Warning("failed to create bucket %s\n", string(sqlIdx))
+					return fmt.Errorf("failed to create bucket %s\n", string(sqlIdx))
 				}
 				log.Info("5")
 				err = b2.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
-					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
+					log.Warning("put %s on bucket %s: %s", m, string(sqlIdx), err)
+					return fmt.Errorf("put %s on bucket %s: %s", m, string(sqlIdx), err)
 				}
 				log.Info("6")
 				return nil
 			})
 			if err != nil {
-				log.Fatal("Failed to db: %s", err)
+				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
 			// _, err := db.LPush([]byte("index"), []byte(m))
 			// if err != nil {
@@ -419,7 +424,7 @@ func logReport() {
 			// if err != nil {
 			// 	log.Fatalf("log failed: %v", err)
 			// }
-			log.Info("3")
+			log.Info("7")
 			// db.FlushAll()
 
 			// SQL Query
@@ -510,7 +515,7 @@ func logReport() {
 			})
 
 			if err != nil {
-				log.Fatal("Failed to db: %s", err)
+				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
 			msgOut <- msgStruct{Type: "E", Content: msg.Content}
 
