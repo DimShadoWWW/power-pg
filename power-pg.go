@@ -485,7 +485,7 @@ func logReport() {
 									m1 = append(m1, []byte(template)[:]...)
 									m1 = append(m1, []byte("\n```\n")[:]...)
 									// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-									if s, err := strconv.ParseInt(string(k), 10, 64); err == nil {
+									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 										msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
 											`> $\uparrow$ Esto es una plantilla que se repite` +
 											"\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
@@ -496,7 +496,7 @@ func logReport() {
 									}
 								}
 							} else {
-								if s, err := strconv.ParseInt(string(k), 10, 64); err == nil {
+								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 									msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
 								} else {
 									log.Fatalf("failed to convert str to int64: %v", err)
