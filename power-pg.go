@@ -468,7 +468,6 @@ func logReport() {
 					for k, v := c.First(); k != nil; k, v = c.Next() {
 						sqlIdx := v[:30]
 
-						fmt.Printf("key=%s, value=%s\n", k, v)
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
 							// has many
