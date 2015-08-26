@@ -466,6 +466,7 @@ func logReport() {
 				if b1 != nil {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
+						log.Warning("string(k): %s\n", string(k))
 						sqlIdx := v[:30]
 
 						b2 := b.Bucket(sqlIdx)
@@ -484,7 +485,6 @@ func logReport() {
 									m1 = append(m1, []byte(template)[:]...)
 									m1 = append(m1, []byte("\n```\n")[:]...)
 									// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-									log.Info(k)
 									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 										msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
 											`> $\uparrow$ Esto es una plantilla que se repite` +
@@ -496,7 +496,6 @@ func logReport() {
 									}
 								}
 							} else {
-								log.Info(k)
 								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 									msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
 								} else {
