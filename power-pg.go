@@ -432,7 +432,7 @@ func logReport() {
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 
-			var m1 = []byte(fmt.Sprintf("\n### %d\n", msg.ID) +
+			var m1 = []byte(fmt.Sprintf("\n"+`{\Large`+" %d}\n", msg.ID) +
 				"\n***\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
@@ -448,7 +448,7 @@ func logReport() {
 		case "BM":
 			log.Debug("SQL template")
 
-			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", msg.ID)), []byte(msg.Content)[:]...)
+			msg := append([]byte(fmt.Sprintf("\n"+`{\Large`+" %d}\n", msg.ID)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			_, err = f.Write(msg)
 			if err != nil {
@@ -461,7 +461,7 @@ func logReport() {
 		case "BM1":
 			log.Debug("SQL template equal")
 
-			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", msg.ID)), []byte(msg.Content)[:]...)
+			msg := append([]byte(fmt.Sprintf("\n"+`{\Large`+" %d}\n", msg.ID)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			_, err = f.Write(msg)
 			if err != nil {
