@@ -140,9 +140,9 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				}
 			}
 			r = buff[:n]
-			log.Debug("PostgreSQL full message: %s\n", string(r))
-			// log.Debug("Remaining bytes: %d\n", remainingBytes)
-			log.Debug("len(r) : %v\n", len(r))
+			// log.Debug("PostgreSQL full message: %s\n", string(r))
+			// // log.Debug("Remaining bytes: %d\n", remainingBytes)
+			// log.Debug("len(r) : %v\n", len(r))
 			// fmt.Println("3")
 			if len(r) > 4 {
 				// fmt.Println("4")

@@ -432,7 +432,7 @@ func logReport() {
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 
-			var m1 = []byte(fmt.Sprintf("\n### %d\n", idx) +
+			var m1 = []byte(fmt.Sprintf("\n### %d\n", msg.ID) +
 				"\n***\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
@@ -448,7 +448,20 @@ func logReport() {
 		case "BM":
 			log.Debug("SQL template")
 
-			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", idx)), []byte(msg.Content)[:]...)
+			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", msg.ID)), []byte(msg.Content)[:]...)
+			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			_, err = f.Write(msg)
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			}
+			f.Close()
+			log.Info("Printed")
+
+			// SQL template
+		case "BM1":
+			log.Debug("SQL template equal")
+
+			msg := append([]byte(fmt.Sprintf("\n***\n %d\n", msg.ID)), []byte(msg.Content)[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 			_, err = f.Write(msg)
 			if err != nil {
@@ -483,21 +496,42 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									// generate template comparing first and last values
-									template := utils.GetVariables(string(q1), string(q2))
+									if bytes.Equal(q1, q2) {
 
-									m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
-									m1 = append(m1, []byte(template)[:]...)
-									m1 = append(m1, []byte("\n```\n")[:]...)
-									// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-										msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
-											`> $\uparrow$ Esto es una plantilla que se repite` +
-											"\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
-											string(q1) + "\n" + string(q2) +
-											"\n```\n" + `\end{minipage}` + "\n\n"}
+										// generate template comparing first and last values
+										template := string(q1)
+
+										m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+										m1 = append(m1, []byte(template)[:]...)
+										m1 = append(m1, []byte("\n```\n")[:]...)
+										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+											msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
+												`> $\uparrow$ Esta query se realiza ` + string(b2.Stats().KeyN) +
+												` veces` + "\n\n" + `Ejemplos:` + "\n" +
+												`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
+												string(q1) + "\n" + string(q2) +
+												"\n```\n" + `\end{minipage}` + "\n\n"}
+										} else {
+											log.Fatalf("failed to convert str to int64: %v", err)
+										}
 									} else {
-										log.Fatalf("failed to convert str to int64: %v", err)
+										// generate template comparing first and last values
+										template := utils.GetVariables(string(q1), string(q2))
+
+										m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+										m1 = append(m1, []byte(template)[:]...)
+										m1 = append(m1, []byte("\n```\n")[:]...)
+										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+											msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
+												`> $\uparrow$ Esto es una plantilla que se repite` +
+												"\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
+												string(q1) + "\n" + string(q2) +
+												"\n```\n" + `\end{minipage}` + "\n\n"}
+										} else {
+											log.Fatalf("failed to convert str to int64: %v", err)
+										}
 									}
 								}
 							} else {
