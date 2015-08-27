@@ -1,1 +1,1 @@
-report-deportes.tenis.copadavis.fixture.2
+deportes.tenis.copadavis.fixture.2
