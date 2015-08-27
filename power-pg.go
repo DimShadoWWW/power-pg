@@ -507,7 +507,7 @@ func logReport() {
 										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
 										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 											msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
-												`> $\uparrow$ Esta query se realiza ` + string(b2.Stats().KeyN) +
+												`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
 												` veces` + "\n\n" + `Ejemplos:` + "\n" +
 												`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
 												string(q1) + "\n" + string(q2) +
