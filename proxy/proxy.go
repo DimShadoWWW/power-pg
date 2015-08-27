@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -140,48 +139,48 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 				}
 			}
 			r = buff[:n]
-			// log.Debug("PostgreSQL full message: %s\n", string(r))
+			log.Debug("PostgreSQL full message: %s\n", string(r))
 			// log.Debug("Remaining bytes: %d\n", remainingBytes)
-			// log.Debug("len(r) : %v\n", len(r))
+			log.Debug("len(r) : %v\n", len(r))
 			// fmt.Println("3")
-			if len(r) > 4 {
-				// fmt.Println("4")
-				// log.Debug("2 Remaining bytes: %d\n", remainingBytes)
-
-				var msg []byte
-				// log.Debug("1 n: %d\n", n)
-				t := r.Byte()
-				// fmt.Println("t: ", string(t))
-				switch t {
-				// case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
-				case 'B', 'P':
-					log.Debug("PostgreSQL pkg type: %s\n", string(t))
-					remainingBytes = r.Int32() - 4
-					r = r[:remainingBytes]
-					if remainingBytes < 4 {
-						fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
-					} else {
-						if remainingBytes > 0 {
-							msg = append(msg, r.Next(remainingBytes)[:]...)
-							msgCh <- Pkg{
-								Type:    t,
-								Content: msg,
-							}
-						}
-					}
-				case 'Q':
-					if !bytes.Contains(r, []byte("DEALLOCATE")) {
-						log.Debug("PostgreSQL pkg type: %s\n", string(t))
-						remainingBytes = r.Int32() - 4
-						r = r[:remainingBytes]
-						msgCh <- Pkg{
-							Type:    t,
-							Content: r,
-						}
-					}
-				}
-			}
-			// fmt.Println("8")
+			// if len(r) > 4 {
+			// 	// fmt.Println("4")
+			// 	// log.Debug("2 Remaining bytes: %d\n", remainingBytes)
+			//
+			// 	var msg []byte
+			// 	// log.Debug("1 n: %d\n", n)
+			// 	t := r.Byte()
+			// 	// fmt.Println("t: ", string(t))
+			// 	switch t {
+			// 	// case 'Q', 'B', 'C', 'd', 'c', 'f', 'D', 'E', 'H', 'F', 'P', 'p', 'S', 'X':
+			// 	case 'B', 'P':
+			// 		log.Debug("PostgreSQL pkg type: %s\n", string(t))
+			// 		remainingBytes = r.Int32() - 4
+			// 		r = r[:remainingBytes]
+			// 		if remainingBytes < 4 {
+			// 			fmt.Println("ERROR: remainingBytes can't be less than 4 bytes if int32")
+			// 		} else {
+			// 			if remainingBytes > 0 {
+			// 				msg = append(msg, r.Next(remainingBytes)[:]...)
+			// 				msgCh <- Pkg{
+			// 					Type:    t,
+			// 					Content: msg,
+			// 				}
+			// 			}
+			// 		}
+			// 	case 'Q':
+			// 		if !bytes.Contains(r, []byte("DEALLOCATE")) {
+			// 			log.Debug("PostgreSQL pkg type: %s\n", string(t))
+			// 			remainingBytes = r.Int32() - 4
+			// 			r = r[:remainingBytes]
+			// 			msgCh <- Pkg{
+			// 				Type:    t,
+			// 				Content: r,
+			// 			}
+			// 		}
+			// 	}
+			// }
+			// // fmt.Println("8")
 		}
 	} else {
 		for {
