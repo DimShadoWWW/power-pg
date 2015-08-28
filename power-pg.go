@@ -501,7 +501,7 @@ func logReport() {
 				return nil
 			})
 			output := tarjan.Connections(graph)
-			msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%#v\n", output)}
+			msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%v\n", output)}
 			// fmt.Println(output)
 
 			//
