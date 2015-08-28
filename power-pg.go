@@ -453,7 +453,7 @@ func logReport() {
 			log.Debug("Output")
 			// Generate
 			included := mapset.NewSet()
-			log.Warning("msg.Content: %s\n", msg.Content)
+			// log.Warning("msg.Content: %s\n", msg.Content)
 
 			// plantuml
 			//
@@ -471,6 +471,8 @@ func logReport() {
 						b2 := b.Bucket(sqlIdx)
 						c1 := b2.Cursor()
 						k1, _ := c1.First()
+						log.Debug("k: %#v\n", k)
+						log.Debug("k1: %#v\n", k1)
 						graph[k] = []interface{}{k1}
 						// if b2 != nil {
 						// 	if b2.Stats().KeyN > 1 {
