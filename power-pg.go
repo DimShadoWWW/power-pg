@@ -19,16 +19,17 @@ import (
 
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
-	"github.com/deckarep/golang-set"
-	// _ "github.com/lib/pq"
-	// "github.com/lunny/nodb"
-	// "github.com/lunny/nodb/config"
 	"github.com/boltdb/bolt"
+	"github.com/deckarep/golang-set"
+	"github.com/looplab/tarjan"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/yosssi/gohtml"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
+	// _ "github.com/lib/pq"
+	// "github.com/lunny/nodb"
+	// "github.com/lunny/nodb/config"
 )
 
 // log "github.com/Sirupsen/logrus"
@@ -336,21 +337,7 @@ func logReport() {
 		case "C":
 			log.Debug("CHANNEL")
 			channel = msg.Content
-			//
-			// dbTempPath := fmt.Sprintf("%s/db/%s/", *baseDir, msg.Content)
-			// if _, err := os.Stat(dbTempPath); os.IsNotExist(err) {
-			// 	err = os.MkdirAll(dbTempPath, 0777)
-			// }
-			// cfg := new(config.Config)
-			// cfg.DataDir = dbTempPath
-			// dbs, err := nodb.Open(cfg)
-			// if err != nil {
-			// 	fmt.Printf("nodb: error opening db: %v", err)
-			// }
-			//
-			// db, _ = dbs.Select(0)
 
-			// sqlIndex = make(sqlStructList)
 			fname = fmt.Sprintf("%s/reports/report-%s.md", *baseDir, msg.Content)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 			// c = 0
@@ -372,60 +359,38 @@ func logReport() {
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
 			sqlIdx := m[:30]
-			// qKey := append([]byte("queries/%s"), sqlIdx[:]...)
-			// iKey := append([]byte("queryIdx/%s"), sqlIdx[:]...)
-			// log.Info("m %s\n", string(m))
-			// log.Info("sqlIdx %s\n", string(sqlIdx))
-			// append query's string in "index"
-			log.Info("0")
+
 			err := db.Update(func(tx *bolt.Tx) error {
-				log.Info("1")
 				b, err := tx.CreateBucketIfNotExists([]byte(channel))
 				if err != nil {
 					log.Warning("create bucket: %s", err)
 					return fmt.Errorf("create bucket: %s", err)
 				}
-				log.Info("2")
 				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
 				if err != nil {
 					log.Warning("failed to create bucket queries\n")
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
-				log.Info("3")
 				err = b1.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
-				log.Info("4")
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
 				if err != nil {
 					log.Warning("failed to create bucket %s\n", string(sqlIdx))
 					return fmt.Errorf("failed to create bucket %s\n", string(sqlIdx))
 				}
-				log.Info("5")
 				err = b2.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, string(sqlIdx), err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, string(sqlIdx), err)
 				}
-				log.Info("6")
 				return nil
 			})
 			if err != nil {
 				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
-			// _, err := db.LPush([]byte("index"), []byte(m))
-			// if err != nil {
-			// 	log.Fatalf("log failed: %v", err)
-			// }
-			// // append query string into query's minized "key"
-			// _, err = db.LPush(qKey, []byte(m))
-			// if err != nil {
-			// 	log.Fatalf("log failed: %v", err)
-			// }
-			log.Info("7")
-			// db.FlushAll()
 
 			// SQL Query
 		case "S":
@@ -458,6 +423,19 @@ func logReport() {
 			log.Info("Printed")
 
 			// SQL template
+		case "MSG":
+			log.Debug("Message")
+
+			msg := []byte(fmt.Sprintf("\n```\n%#v\n```\n", []byte(msg.Content)))
+			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			_, err = f.Write(msg)
+			if err != nil {
+				log.Fatalf("log failed: %v", err)
+			}
+			f.Close()
+			log.Info("Printed")
+
+			// SQL template
 		case "BM1":
 			log.Debug("SQL template equal")
 
@@ -477,7 +455,44 @@ func logReport() {
 			included := mapset.NewSet()
 			log.Warning("msg.Content: %s\n", msg.Content)
 
+			// plantuml
+			//
+			// includedPlantUml := mapset.NewSet()
+			graph := make(map[interface{}][]interface{})
+			// graph["1"] = []interface{}{"2"}
 			err := db.View(func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(channel))
+
+				b1 := b.Bucket([]byte("queries"))
+				if b1 != nil {
+					c := b1.Cursor()
+					for k, v := c.First(); k != nil; k, v = c.Next() {
+						sqlIdx := v[:30]
+						b2 := b.Bucket(sqlIdx)
+						c1 := b2.Cursor()
+						k1, _ := c1.First()
+						graph[k] = []interface{}{k1}
+						// if b2 != nil {
+						// 	if b2.Stats().KeyN > 1 {
+						// 	} else {
+						// 		if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+						// 			msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
+						// 		} else {
+						// 			log.Fatalf("failed to convert str to int64: %v", err)
+						// 		}
+						// 	}
+						// }
+						// included.Add(string(sqlIdx))
+					}
+				}
+				return nil
+			})
+			output := tarjan.Connections(graph)
+			fmt.Println(output)
+
+			//
+
+			err = db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 
 				b1 := b.Bucket([]byte("queries"))
