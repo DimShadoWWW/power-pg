@@ -471,9 +471,17 @@ func logReport() {
 						b2 := b.Bucket(sqlIdx)
 						c1 := b2.Cursor()
 						k1, _ := c1.First()
-						log.Debug("k: %#v\n", k)
-						log.Debug("k1: %#v\n", k1)
-						graph[k] = []interface{}{k1}
+						k_s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64)
+						if err == nil {
+							log.Fatalf("failed to convert str to int64: %v", err)
+						}
+						k1_s, err := strconv.ParseInt(strings.Trim(string(k1), " "), 10, 64)
+						if err == nil {
+							log.Fatalf("failed to convert str to int64: %v", err)
+						}
+						log.Debug("k: %#v\n", k_s)
+						log.Debug("k1: %#v\n", k1_s)
+						graph[k_s] = []interface{}{k1_s}
 						// if b2 != nil {
 						// 	if b2.Stats().KeyN > 1 {
 						// 	} else {
