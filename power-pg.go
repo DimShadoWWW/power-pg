@@ -640,7 +640,7 @@ func tarjan(s int, v int) bool {
 	point_stack = append(point_stack, v)
 	marked[v] = true
 	marked_stack = append(marked_stack, v)
-
+	log.Debug("s %d, v %d \ngraph %#v\n", s, v, graph)
 	for _, w := range graph[v] {
 		cb := make(chan bool, len(graph[v]))
 		go branch(s, v, w, cb)
