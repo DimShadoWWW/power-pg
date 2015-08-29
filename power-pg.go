@@ -478,10 +478,12 @@ func logReport() {
 						k1, _ := c1.First()
 						// log.Debug("k: %#v\n", k)
 						// log.Debug("string(bytes.TrimLeft(k, \"0\")): %#v\n", string(bytes.TrimLeft(k, "0")))
-						k_s, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
-						if err != nil {
-							log.Fatalf("failed to convert str to int64: %v", err)
-						}
+
+						// k_s, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
+						// if err != nil {
+						// 	log.Fatalf("failed to convert str to int64: %v", err)
+						// }
+
 						// log.Debug("k_s: %#v\n", k_s)
 						// log.Debug("k1: %#v\n", k1)
 						k1_s, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
