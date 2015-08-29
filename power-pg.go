@@ -21,7 +21,6 @@ import (
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/boltdb/bolt"
 	"github.com/deckarep/golang-set"
-	"github.com/looplab/tarjan"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/yosssi/gohtml"
@@ -46,6 +45,11 @@ var (
 	dbPassword    = flag.String("p", "password", "password para acceder al servidor PostgreSQL")
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
 	recreate      = flag.Bool("R", false, "recreacion de escenario")
+
+	G, graph     [][]int
+	point_stack  []int
+	marked       []bool
+	marked_stack []int
 	// messages      = []string{}
 )
 
@@ -458,8 +462,9 @@ func logReport() {
 			// plantuml
 			//
 			// includedPlantUml := mapset.NewSet()
-			graph := make(map[interface{}][]interface{})
+			// graph := make(map[interface{}][]interface{})
 			// graph["1"] = []interface{}{"2"}
+			var graph [][]int
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 
@@ -483,8 +488,9 @@ func logReport() {
 						if err != nil {
 							log.Fatalf("failed to convert str to int64: %v", err)
 						}
+						graph = append(graph, []int{int(k1_s)})
 						// log.Debug("k1_s: %#v\n", k1_s)
-						graph[k_s] = []interface{}{k1_s}
+						// graph[k_s] = []interface{}{k1_s}
 						// if b2 != nil {
 						// 	if b2.Stats().KeyN > 1 {
 						// 	} else {
@@ -500,7 +506,8 @@ func logReport() {
 				}
 				return nil
 			})
-			output := tarjan.Connections(graph)
+			// output := tarjan.Connections(graph)
+			output := entry_tarjan(graph)
 			msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%v\n", output)}
 			// fmt.Println(output)
 
@@ -610,6 +617,61 @@ func logReport() {
 		}
 		// }
 	}
+}
+
+func entry_tarjan(G [][]int) []bool {
+	marked = make([]bool, len(G))
+
+	for i := 0; i < len(G); i++ {
+		tarjan(i, i)
+		for len(marked_stack) > 0 {
+			u := marked_stack[len(marked_stack)-1]
+			marked_stack = marked_stack[:len(marked_stack)-1]
+			marked[u] = false
+		}
+	}
+	return marked
+}
+
+func tarjan(s int, v int) bool {
+	f := false
+	point_stack = append(point_stack, v)
+	marked[v] = true
+	marked_stack = append(marked_stack, v)
+
+	for _, w := range G[v] {
+		cb := make(chan bool, len(G[v]))
+		go branch(s, v, w, cb)
+		f = <-cb
+	}
+
+	if f == true {
+		for marked_stack[len(marked_stack)-1] != v {
+			u_ := marked_stack[len(marked_stack)-1]
+			marked_stack = marked_stack[:len(marked_stack)-1]
+			marked[u_] = false
+		}
+		marked_stack = marked_stack[:len(marked_stack)-1]
+		marked[v] = false
+	}
+
+	point_stack = point_stack[:len(point_stack)-1]
+	return f
+}
+
+func branch(s int, v int, w int, cb chan bool) {
+	f_ := false
+	if w < s {
+		G[w] = []int{}
+	} else if w == s {
+		fmt.Println(point_stack)
+		f_ = true
+	} else if marked[w] == false {
+		g_ := tarjan(s, w)
+		f_ = f_ || g_
+	}
+
+	cb <- f_
 }
 
 func base() {
