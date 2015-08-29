@@ -46,7 +46,7 @@ var (
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
 	recreate      = flag.Bool("R", false, "recreacion de escenario")
 
-	G, graph     [][]int
+	graph        [][]int
 	point_stack  []int
 	marked       []bool
 	marked_stack []int
@@ -641,8 +641,8 @@ func tarjan(s int, v int) bool {
 	marked[v] = true
 	marked_stack = append(marked_stack, v)
 
-	for _, w := range G[v] {
-		cb := make(chan bool, len(G[v]))
+	for _, w := range graph[v] {
+		cb := make(chan bool, len(graph[v]))
 		go branch(s, v, w, cb)
 		f = <-cb
 	}
@@ -664,7 +664,7 @@ func tarjan(s int, v int) bool {
 func branch(s int, v int, w int, cb chan bool) {
 	f_ := false
 	if w < s {
-		G[w] = []int{}
+		graph[w] = []int{}
 	} else if w == s {
 		fmt.Println(point_stack)
 		f_ = true
