@@ -20,6 +20,7 @@ import (
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/boltdb/bolt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/deckarep/golang-set"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
@@ -62,6 +63,8 @@ func (s *seqStruct) Process() {
 	var initial, final int
 	s.Output = append(s.Output, "@startuml\n")
 	init := true
+	spew.Dump(s)
+	os.Exit(0)
 	for _, i := range s.Seq {
 		final = i
 		//  && includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, i))
