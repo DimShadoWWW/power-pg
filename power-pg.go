@@ -82,12 +82,11 @@ func (s *seqStruct) Process() {
 				init = false
 			} else {
 				if included.Contains(initial) {
-					includedPlantUml.Add(fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
 					s.Output = append(s.Output, fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
 				} else {
-					includedPlantUml.Add(fmt.Sprintf("Query_%d -down-> Query_%d\n", initial, final))
 					s.Output = append(s.Output, fmt.Sprintf("Query_%d -down-> Query_%d\n", initial, final))
 				}
+				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
 
 					m := spaces.ReplaceAll([]byte(s.SeqStrings[i]), []byte{' '})
