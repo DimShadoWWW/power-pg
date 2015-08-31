@@ -68,7 +68,7 @@ func (s *seqStruct) Process() {
 		} else {
 			// s.SeqStrings[i]
 			if len(s.Output) == 0 {
-				s.Output = append(s.Output, fmt.Sprintf("[*] -> Query-%d\n", final))
+				s.Output = append(s.Output, fmt.Sprintf("@startuml\n[*] -> Query-%d\n", final))
 			} else {
 				includedPlantUml.Add(fmt.Sprintf("Query-%d -> Query-%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query-%d -> Query-%d\n", initial, final))
@@ -76,7 +76,7 @@ func (s *seqStruct) Process() {
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query-%d -> %s\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query-%d -> %s\n@enduml\n", initial, "[*]"))
 }
 
 type msgStruct struct {
