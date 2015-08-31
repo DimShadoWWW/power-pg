@@ -89,7 +89,7 @@ func (s *seqStruct) Process() {
 					//
 					wrapped := strings.Split(text.Wrap(string(multipleSpaces.ReplaceAll(m, []byte{' '})), 40), "\n")
 					for _, v := range wrapped {
-						l := wordwrap.WrapString(v, 50)
+						l := wordwrap.WrapString(v, 150)
 						// for _, v1 := range l {
 						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(l)))
 						// }
