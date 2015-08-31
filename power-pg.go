@@ -88,9 +88,13 @@ func (s *seqStruct) Process() {
 				// }
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
+					log.Debug("string(s.SeqStrings[i]): %#v\n", string(s.SeqStrings[i]))
 					m := spaces.ReplaceAll([]byte(s.SeqStrings[i]), []byte{' '})
+					log.Debug("11\n")
 					wrapped := strings.Split(text.Wrap(string(multipleSpaces.ReplaceAll(m, []byte{' '})), 120), "\n")
+					log.Debug("22\n")
 					for _, v := range wrapped {
+						log.Debug("33\n")
 						// l := wordwrap.WrapString(v, 150)
 						// for _, v1 := range l {
 						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(v)))
