@@ -63,20 +63,22 @@ func (s *seqStruct) Process() {
 	for _, i := range s.Seq {
 		final = i
 		//  && includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, i))
-		if includedPlantUml.Contains(fmt.Sprintf("Query_%d --> Query_%d\n", initial, final)) {
+		if includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final)) {
 			initial = final
 		} else {
-			// s.SeqStrings[i]
 			if len(s.Output) == 0 {
 				s.Output = append(s.Output, fmt.Sprintf("@startuml\n[*] --> Query_%d\n", final))
 			} else {
-				includedPlantUml.Add(fmt.Sprintf("Query_%d --> Query_%d\n", initial, final))
+				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
+				if s.SeqStrings[i] != "" {
+					s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, s.SeqStrings[i]))
+				}
 			}
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query_%d --> %s\n@enduml\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query_%d -> %s\n@enduml\n", initial, "[*]"))
 }
 
 type msgStruct struct {
@@ -498,20 +500,35 @@ func logReport() {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
 						sqlIdx := v[:30]
-						b2 := b.Bucket(sqlIdx)
-						c1 := b2.Cursor()
-						k1, _ := c1.First()
-						kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
-						if err != nil {
-							log.Fatalf("failed to convert str to int64: %v", err)
-						}
-						graph.SeqStrings[int(kI)] = string(sqlIdx)
 
-						k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
-						if err != nil {
-							log.Fatalf("failed to convert str to int64: %v", err)
+						b2 := b.Bucket(sqlIdx)
+						if b2 != nil {
+							// has many
+							if b2.Stats().KeyN > 1 {
+								if !included.Contains(string(sqlIdx)) {
+									c1 := b2.Cursor()
+									k1, q1 := c1.First()
+									_, q2 := c1.Last()
+									template := ""
+									if !bytes.Equal(q1, q2) {
+										template = utils.GetVariables(string(q1), string(q2))
+									}
+									kI, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+									if err != nil {
+										log.Fatalf("failed to convert str to int64: %v", err)
+									}
+									graph.SeqStrings[int(kI)] = template
+								}
+							}
 						}
-						graph.Seq = append(graph.Seq, int(k1Int))
+						// c1 := b2.Cursor()
+						// k1, _ := c1.First()
+						//
+						// k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+						// if err != nil {
+						// 	log.Fatalf("failed to convert str to int64: %v", err)
+						// }
+						// graph.Seq = append(graph.Seq, int(k1Int))
 					}
 				}
 				return nil
