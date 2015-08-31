@@ -61,10 +61,9 @@ func (s *seqStruct) Process() {
 	// status := make(map[int]int)
 	var initial, final int
 	for _, i := range s.Seq {
-		switch {
-		case includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)) && includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", initial, i)):
+		if includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)) && includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", initial, i)) {
 			initial = final
-		default:
+		} else {
 			final = i
 			// s.SeqStrings[i]
 			if len(s.Output) == 0 {
@@ -76,7 +75,7 @@ func (s *seqStruct) Process() {
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query %s -> %s\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query %d -> %s\n", initial, "[*]"))
 }
 
 type msgStruct struct {
