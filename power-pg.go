@@ -531,6 +531,10 @@ func logReport() {
 						if b2 != nil {
 							c1 := b2.Cursor()
 							k1, q1 := c1.First()
+							kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
+							if err != nil {
+								log.Fatalf("failed to convert str to int64: %v", err)
+							}
 							// has many
 							if b2.Stats().KeyN > 1 {
 								// if !included.Contains(string(sqlIdx)) {
@@ -539,11 +543,9 @@ func logReport() {
 								if !bytes.Equal(q1, q2) {
 									template = utils.GetVariables(string(q1), string(q2))
 								}
-								kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
-								if err != nil {
-									log.Fatalf("failed to convert str to int64: %v", err)
-								}
 								graph.SeqStrings[int(kI)] = template
+							} else {
+								graph.SeqStrings[int(kI)] = q1
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
