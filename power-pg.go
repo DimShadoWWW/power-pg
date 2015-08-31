@@ -542,8 +542,8 @@ func logReport() {
 									template = utils.GetVariables(string(q1), string(q2))
 								}
 								graph.SeqStrings[int(kI)] = template
-								// } else {
-								// 	graph.SeqStrings[int(kI)] = string(q1)
+							} else {
+								graph.SeqStrings[int(kI)] = string(v)
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
