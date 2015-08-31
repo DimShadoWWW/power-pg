@@ -20,7 +20,7 @@ import (
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/boltdb/bolt"
-	"github.com/davecgh/go-spew/spew"
+	// "github.com/davecgh/go-spew/spew"
 	"github.com/deckarep/golang-set"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
@@ -63,8 +63,8 @@ func (s *seqStruct) Process() {
 	var initial, final int
 	s.Output = append(s.Output, "@startuml\n")
 	init := true
-	spew.Dump(s)
-	os.Exit(0)
+	// spew.Dump(s)
+	// os.Exit(0)
 	for _, i := range s.Seq {
 		final = i
 		//  && includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, i))
@@ -510,23 +510,28 @@ func logReport() {
 
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
+							c1 := b2.Cursor()
+							k1, q1 := c1.First()
 							// has many
 							if b2.Stats().KeyN > 1 {
-								if !included.Contains(string(sqlIdx)) {
-									c1 := b2.Cursor()
-									k1, q1 := c1.First()
-									_, q2 := c1.Last()
-									template := ""
-									if !bytes.Equal(q1, q2) {
-										template = utils.GetVariables(string(q1), string(q2))
-									}
-									kI, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
-									if err != nil {
-										log.Fatalf("failed to convert str to int64: %v", err)
-									}
-									graph.SeqStrings[int(kI)] = template
+								// if !included.Contains(string(sqlIdx)) {
+								_, q2 := c1.Last()
+								template := ""
+								if !bytes.Equal(q1, q2) {
+									template = utils.GetVariables(string(q1), string(q2))
 								}
+								kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
+								if err != nil {
+									log.Fatalf("failed to convert str to int64: %v", err)
+								}
+								graph.SeqStrings[int(kI)] = template
 							}
+							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+							if err != nil {
+								log.Fatalf("failed to convert str to int64: %v", err)
+							}
+							graph.Seq = append(graph.Seq, int(k1Int))
+							// }
 						}
 						// c1 := b2.Cursor()
 						// k1, _ := c1.First()
