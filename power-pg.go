@@ -46,12 +46,33 @@ var (
 	remoteService = flag.String("s", "", "http://localhost:8080/query")
 	recreate      = flag.Bool("R", false, "recreacion de escenario")
 
-	graph        [][]int
-	point_stack  []int
-	marked       []bool
-	marked_stack []int
+	graph seqStruct
 	// messages      = []string{}
 )
+
+type seqStruct struct {
+	Seq        []int
+	SeqStrings map[int]string
+	Output     []string
+}
+
+func (s *seqStruct) Process() {
+	includedPlantUml := mapset.NewSet()
+	// status := make(map[int]int)
+	initial := "[*]"
+	final := ""
+	for _, i := range s.Seq {
+		switch {
+		case includedPlantUml.Contains(fmt.Sprintf("%s -> %s", s.SeqStrings[i], s.SeqStrings[i+1])):
+			initial = final
+		default:
+			initial = s.SeqStrings[i]
+			includedPlantUml.Add(fmt.Sprintf("%s -> %s", initial, final))
+			initial = final
+		}
+	}
+	includedPlantUml.Add(fmt.Sprintf("%s -> %s", initial, "[*]"))
+}
 
 type msgStruct struct {
 	Type    string
@@ -348,7 +369,7 @@ func logReport() {
 			if err != nil {
 				panic(err)
 			}
-			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content)+`\input{test.tex}`+"\n")
+			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content) + `\input{test.tex}` + "\n")
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
@@ -462,9 +483,8 @@ func logReport() {
 			// plantuml
 			//
 			// includedPlantUml := mapset.NewSet()
-			// graph := make(map[interface{}][]interface{})
+			graph.SeqStrings = make(map[int]string)
 			// graph["1"] = []interface{}{"2"}
-			var graph [][]int
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 
@@ -476,43 +496,34 @@ func logReport() {
 						b2 := b.Bucket(sqlIdx)
 						c1 := b2.Cursor()
 						k1, _ := c1.First()
-						// log.Debug("k: %#v\n", k)
-						// log.Debug("string(bytes.TrimLeft(k, \"0\")): %#v\n", string(bytes.TrimLeft(k, "0")))
-
-						// k_s, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
-						// if err != nil {
-						// 	log.Fatalf("failed to convert str to int64: %v", err)
-						// }
-
-						// log.Debug("k_s: %#v\n", k_s)
-						// log.Debug("k1: %#v\n", k1)
-						k1_s, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+						kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
 						if err != nil {
 							log.Fatalf("failed to convert str to int64: %v", err)
 						}
-						graph = append(graph, []int{int(k1_s)})
-						// log.Debug("k1_s: %#v\n", k1_s)
-						// graph[k_s] = []interface{}{k1_s}
-						// if b2 != nil {
-						// 	if b2.Stats().KeyN > 1 {
-						// 	} else {
-						// 		if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-						// 			msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
-						// 		} else {
-						// 			log.Fatalf("failed to convert str to int64: %v", err)
-						// 		}
-						// 	}
-						// }
-						// included.Add(string(sqlIdx))
+						graph.SeqStrings[int(kI)] = string(sqlIdx)
+
+						k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+						if err != nil {
+							log.Fatalf("failed to convert str to int64: %v", err)
+						}
+						graph.Seq = append(graph.Seq, int(k1Int))
 					}
 				}
 				return nil
 			})
 			// output := tarjan.Connections(graph)
-			output := entry_tarjan(graph)
-			msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%v\n", output)}
-			// fmt.Println(output)
+			graph.Process()
+			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			for _, st := range graph.Output {
+				_, err = f.WriteString(st)
+				if err != nil {
+					log.Fatalf("log failed: %v", err)
+				}
+			}
 
+			f.Close()
+			// msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%v\n", output)}
+			// fmt.Println(output)
 			//
 
 			err = db.View(func(tx *bolt.Tx) error {
@@ -619,61 +630,6 @@ func logReport() {
 		}
 		// }
 	}
-}
-
-func entry_tarjan(G [][]int) []bool {
-	marked = make([]bool, len(G))
-
-	for i := 0; i < len(G); i++ {
-		tarjan(i, i)
-		for len(marked_stack) > 0 {
-			u := marked_stack[len(marked_stack)-1]
-			marked_stack = marked_stack[:len(marked_stack)-1]
-			marked[u] = false
-		}
-	}
-	return marked
-}
-
-func tarjan(s int, v int) bool {
-	f := false
-	point_stack = append(point_stack, v)
-	marked[v] = true
-	marked_stack = append(marked_stack, v)
-	log.Debug("s %d, v %d \ngraph %#v\n", s, v, graph)
-	for _, w := range graph[v] {
-		cb := make(chan bool, len(graph[v]))
-		go branch(s, v, w, cb)
-		f = <-cb
-	}
-
-	if f == true {
-		for marked_stack[len(marked_stack)-1] != v {
-			u_ := marked_stack[len(marked_stack)-1]
-			marked_stack = marked_stack[:len(marked_stack)-1]
-			marked[u_] = false
-		}
-		marked_stack = marked_stack[:len(marked_stack)-1]
-		marked[v] = false
-	}
-
-	point_stack = point_stack[:len(point_stack)-1]
-	return f
-}
-
-func branch(s int, v int, w int, cb chan bool) {
-	f_ := false
-	if w < s {
-		graph[w] = []int{}
-	} else if w == s {
-		fmt.Println(point_stack)
-		f_ = true
-	} else if marked[w] == false {
-		g_ := tarjan(s, w)
-		f_ = f_ || g_
-	}
-
-	cb <- f_
 }
 
 func base() {
