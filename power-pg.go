@@ -543,7 +543,9 @@ func logReport() {
 								}
 								graph.SeqStrings[int(kI)] = template
 							} else {
+								log.Debug("string(v): %#v\n", string(v))
 								graph.SeqStrings[int(kI)] = string(v)
+								log.Debug("aaaa")
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
