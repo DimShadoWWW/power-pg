@@ -61,21 +61,22 @@ func (s *seqStruct) Process() {
 	// status := make(map[int]int)
 	var initial, final int
 	for _, i := range s.Seq {
-		if includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)) && includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", initial, i)) {
+		final = i
+		//  && includedPlantUml.Contains(fmt.Sprintf("Query-%d -> Query-%d\n", initial, i))
+		if includedPlantUml.Contains(fmt.Sprintf("Query-%d -> Query-%d\n", initial, final)) {
 			initial = final
 		} else {
-			final = i
 			// s.SeqStrings[i]
 			if len(s.Output) == 0 {
-				s.Output = append(s.Output, fmt.Sprintf("[*] -> Query %d\n", final))
+				s.Output = append(s.Output, fmt.Sprintf("[*] -> Query-%d\n", final))
 			} else {
-				includedPlantUml.Add(fmt.Sprintf("Query %d -> Query %d\n", initial, final))
-				s.Output = append(s.Output, fmt.Sprintf("Query %d -> Query %d\n", initial, final))
+				includedPlantUml.Add(fmt.Sprintf("Query-%d -> Query-%d\n", initial, final))
+				s.Output = append(s.Output, fmt.Sprintf("Query-%d -> Query-%d\n", initial, final))
 			}
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query %d -> %s\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query-%d -> %s\n", initial, "[*]"))
 }
 
 type msgStruct struct {
@@ -517,7 +518,7 @@ func logReport() {
 			})
 			// output := tarjan.Connections(graph)
 			graph.Process()
-			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE, 0777)
 			for _, st := range graph.Output {
 				_, err = f.WriteString(st)
 				if err != nil {
