@@ -59,20 +59,19 @@ type seqStruct struct {
 func (s *seqStruct) Process() {
 	includedPlantUml := mapset.NewSet()
 	// status := make(map[int]int)
-	initial := "[*]"
-	final := ""
+	var initial, final int
 	for _, i := range s.Seq {
 		switch {
 		case includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)):
 			initial = final
 		default:
-			final = string(i)
+			final = i
 			// s.SeqStrings[i]
-			if initial == "[*]" {
-				s.Output = append(s.Output, fmt.Sprintf("%s -> Query %s\n", initial, final))
+			if len(s.Output) == 0 {
+				s.Output = append(s.Output, fmt.Sprintf("[*] -> Query %d\n", final))
 			} else {
-				includedPlantUml.Add(fmt.Sprintf("Query %s -> Query %s\n", initial, final))
-				s.Output = append(s.Output, fmt.Sprintf("Query %s -> Query %s\n", initial, final))
+				includedPlantUml.Add(fmt.Sprintf("Query %d -> Query %d\n", initial, final))
+				s.Output = append(s.Output, fmt.Sprintf("Query %d -> Query %d\n", initial, final))
 			}
 			initial = final
 		}
