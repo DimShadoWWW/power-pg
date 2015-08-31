@@ -62,21 +62,21 @@ func (s *seqStruct) Process() {
 	var initial, final int
 	for _, i := range s.Seq {
 		final = i
-		//  && includedPlantUml.Contains(fmt.Sprintf("Query-%d -> Query-%d\n", initial, i))
-		if includedPlantUml.Contains(fmt.Sprintf("Query-%d --> Query-%d\n", initial, final)) {
+		//  && includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, i))
+		if includedPlantUml.Contains(fmt.Sprintf("Query_%d --> Query_%d\n", initial, final)) {
 			initial = final
 		} else {
 			// s.SeqStrings[i]
 			if len(s.Output) == 0 {
-				s.Output = append(s.Output, fmt.Sprintf("@startuml\n[*] --> Query-%d\n", final))
+				s.Output = append(s.Output, fmt.Sprintf("@startuml\n[*] --> Query_%d\n", final))
 			} else {
-				includedPlantUml.Add(fmt.Sprintf("Query-%d --> Query-%d\n", initial, final))
-				s.Output = append(s.Output, fmt.Sprintf("Query-%d -> Query-%d\n", initial, final))
+				includedPlantUml.Add(fmt.Sprintf("Query_%d --> Query_%d\n", initial, final))
+				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 			}
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query-%d --> %s\n@enduml\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query_%d --> %s\n@enduml\n", initial, "[*]"))
 }
 
 type msgStruct struct {
