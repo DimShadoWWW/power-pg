@@ -543,9 +543,7 @@ func logReport() {
 								}
 								graph.SeqStrings[int(kI)] = template
 							} else {
-								log.Debug("string(v): %#v\n", string(v))
 								graph.SeqStrings[int(kI)] = string(v)
-								log.Debug("aaaa")
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
@@ -567,7 +565,10 @@ func logReport() {
 				return nil
 			})
 			// output := tarjan.Connections(graph)
+			log.Debug("aaaa")
 			graph.Process()
+			log.Debug("bbbb")
+
 			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE, 0777)
 			for _, st := range graph.Output {
 				_, err = f.WriteString(st)
