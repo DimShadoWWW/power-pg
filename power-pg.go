@@ -68,10 +68,11 @@ func (s *seqStruct) Process() {
 		default:
 			initial = s.SeqStrings[i]
 			includedPlantUml.Add(fmt.Sprintf("%s -> %s", initial, final))
+			s.Output = append(s.Output, fmt.Sprintf("%s -> %s", initial, final))
 			initial = final
 		}
 	}
-	includedPlantUml.Add(fmt.Sprintf("%s -> %s", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("%s -> %s", initial, "[*]"))
 }
 
 type msgStruct struct {
