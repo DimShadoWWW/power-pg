@@ -81,10 +81,10 @@ func (s *seqStruct) Process() {
 				s.Output = append(s.Output, fmt.Sprintf("[*] --> Query_%d\n", final))
 				init = false
 			} else {
-				if included.Contains(initial) {
-					s.Output = append(s.Output, fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
-				} else {
+				if !included.Contains(initial) {
 					s.Output = append(s.Output, fmt.Sprintf("Query_%d -down-> Query_%d\n", initial, final))
+				} else {
+					s.Output = append(s.Output, fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
 				}
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
@@ -102,7 +102,6 @@ func (s *seqStruct) Process() {
 			}
 			initial = final
 		}
-
 		included.Add(initial)
 	}
 	s.Output = append(s.Output, fmt.Sprintf("Query_%d --> %s\n@enduml\n", initial, "[*]"))
