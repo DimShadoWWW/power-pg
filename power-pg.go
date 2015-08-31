@@ -19,11 +19,11 @@ import (
 
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
+	"github.com/DimShadoWWW/text"
 	"github.com/boltdb/bolt"
 	"github.com/deckarep/golang-set"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
-	"github.com/tonnerre/golang-text"
 	"github.com/yosssi/gohtml"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -93,6 +93,7 @@ func (s *seqStruct) Process() {
 					log.Debug("11\n")
 					a := multipleSpaces.ReplaceAll(m, []byte{' '})
 					log.Debug("22\n")
+					// text.Wrap(s string, lim int)
 					b := text.Wrap(string(a), 120)
 					log.Debug("33\n")
 					wrapped := strings.Split(b, "\n")
