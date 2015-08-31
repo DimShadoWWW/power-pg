@@ -24,6 +24,7 @@ import (
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
+	"github.com/tonnerre/golang-text"
 	"github.com/yosssi/gohtml"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -59,6 +60,9 @@ type seqStruct struct {
 }
 
 func (s *seqStruct) Process() {
+	spaces := regexp.MustCompile("[ \r\t\n]+")
+	multipleSpaces := regexp.MustCompile("    ")
+
 	includedPlantUml := mapset.NewSet()
 	// status := make(map[int]int)
 	var initial, final int
@@ -80,12 +84,15 @@ func (s *seqStruct) Process() {
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
-					wrapped := strings.Split(s.SeqStrings[i], "\n")
+
+					m := spaces.ReplaceAll([]byte(s.SeqStrings[i]), []byte{' '})
+					//
+					wrapped := strings.Split(text.Wrap(string(multipleSpaces.ReplaceAll(m, []byte{' '})), 40), "\n")
 					for _, v := range wrapped {
-						l := wordwrap.WrapString(v, 10)
-						for _, v1 := range l {
-							s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, v1))
-						}
+						l := wordwrap.WrapString(v, 8)
+						// for _, v1 := range l {
+						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(l)))
+						// }
 					}
 				}
 			}
