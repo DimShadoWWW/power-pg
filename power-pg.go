@@ -80,9 +80,12 @@ func (s *seqStruct) Process() {
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
-					wrapped := wordwrap.WrapString(s.SeqStrings[i], 20)
+					wrapped := strings.Split(s.SeqStrings[i], "\n")
 					for _, v := range wrapped {
-						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, wrapped))
+						l := wordwrap.WrapString(v, 10)
+						for _, v1 := range l {
+							s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, v1))
+						}
 					}
 				}
 			}
