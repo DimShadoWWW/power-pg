@@ -21,6 +21,7 @@ import (
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/boltdb/bolt"
 	"github.com/deckarep/golang-set"
+	"github.com/mitchellh/go-wordwrap"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/tonnerre/golang-text"
@@ -91,12 +92,12 @@ func (s *seqStruct) Process() {
 
 					m := spaces.ReplaceAll([]byte(s.SeqStrings[i]), []byte{' '})
 					//
-					wrapped := strings.Split(text.Wrap(string(multipleSpaces.ReplaceAll(m, []byte{' '})), 150), "\n")
+					wrapped := strings.Split(text.Wrap(string(multipleSpaces.ReplaceAll(m, []byte{' '})), 120), "\n")
 					for _, v := range wrapped {
-						// l := wordwrap.WrapString(v, 150)
-						// for _, v1 := range l {
-						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(v)))
-						// }
+						l := wordwrap.WrapString(v, 150)
+						for _, v1 := range l {
+							s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(v1)))
+						}
 					}
 				}
 			}
@@ -545,7 +546,7 @@ func logReport() {
 								}
 								graph.SeqStrings[int(kI)] = template
 							} else {
-								graph.SeqStrings[int(kI)] = q1
+								graph.SeqStrings[int(kI)] = string(q1)
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
