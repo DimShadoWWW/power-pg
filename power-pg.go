@@ -348,7 +348,7 @@ func logReport() {
 			if err != nil {
 				panic(err)
 			}
-			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content))
+			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content)+`\input{test.tex}`+"\n")
 			if err != nil {
 				log.Fatalf("log failed: %v", err)
 			}
