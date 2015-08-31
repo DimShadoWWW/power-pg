@@ -20,13 +20,14 @@ import (
 	"github.com/DimShadoWWW/power-pg/proxy"
 	"github.com/DimShadoWWW/power-pg/utils"
 	"github.com/boltdb/bolt"
-	// "github.com/davecgh/go-spew/spew"
 	"github.com/deckarep/golang-set"
+	"github.com/mitchellh/go-wordwrap"
 	"github.com/op/go-logging"
 	"github.com/parnurzeal/gorequest"
 	"github.com/yosssi/gohtml"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
+	// "github.com/davecgh/go-spew/spew"
 	// _ "github.com/lib/pq"
 	// "github.com/lunny/nodb"
 	// "github.com/lunny/nodb/config"
@@ -79,7 +80,10 @@ func (s *seqStruct) Process() {
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				if s.SeqStrings[i] != "" {
-					s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, s.SeqStrings[i]))
+					wrapped := wordwrap.WrapString(s.SeqStrings[i], 20)
+					for _, v := range wrapped {
+						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, wrapped))
+					}
 				}
 			}
 			initial = final
