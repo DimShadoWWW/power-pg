@@ -62,7 +62,7 @@ func (s *seqStruct) Process() {
 	var initial, final int
 	for _, i := range s.Seq {
 		switch {
-		case includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)):
+		case includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", i, i+1)) && includedPlantUml.Contains(fmt.Sprintf("Query %d -> Query %d\n", initial, i)):
 			initial = final
 		default:
 			final = i
