@@ -490,7 +490,7 @@ func logReport() {
 			// plantuml
 			//
 			// includedPlantUml := mapset.NewSet()
-			graph.SeqStrings = make(map[int]string)
+			// graph.SeqStrings = make(map[int]string)
 			// graph["1"] = []interface{}{"2"}
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
