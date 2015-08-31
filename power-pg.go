@@ -63,16 +63,16 @@ func (s *seqStruct) Process() {
 	final := ""
 	for _, i := range s.Seq {
 		switch {
-		case includedPlantUml.Contains(fmt.Sprintf("%s -> %s", s.SeqStrings[i], s.SeqStrings[i+1])):
+		case includedPlantUml.Contains(fmt.Sprintf("%s -> %s\n", s.SeqStrings[i], s.SeqStrings[i+1])):
 			initial = final
 		default:
 			initial = s.SeqStrings[i]
-			includedPlantUml.Add(fmt.Sprintf("%s -> %s", initial, final))
-			s.Output = append(s.Output, fmt.Sprintf("%s -> %s", initial, final))
+			includedPlantUml.Add(fmt.Sprintf("%s -> %s\n", initial, final))
+			s.Output = append(s.Output, fmt.Sprintf("%s -> %s\n", initial, final))
 			initial = final
 		}
 	}
-	s.Output = append(s.Output, fmt.Sprintf("%s -> %s", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("%s -> %s\n", initial, "[*]"))
 }
 
 type msgStruct struct {
