@@ -60,14 +60,18 @@ func (s *seqStruct) Process() {
 	includedPlantUml := mapset.NewSet()
 	// status := make(map[int]int)
 	var initial, final int
+	s.Output = append(s.Output, "@startuml\n")
+	init := true
 	for _, i := range s.Seq {
 		final = i
 		//  && includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, i))
 		if includedPlantUml.Contains(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final)) {
 			initial = final
 		} else {
-			if len(s.Output) == 0 {
-				s.Output = append(s.Output, fmt.Sprintf("@startuml\n[*] --> Query_%d\n", final))
+			// first loop
+			if init {
+				s.Output = append(s.Output, fmt.Sprintf("[*] --> Query_%d\n", final))
+				init = false
 			} else {
 				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
 				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
