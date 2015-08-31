@@ -63,7 +63,8 @@ func (s *seqStruct) Process() {
 	multipleSpaces := regexp.MustCompile("    ")
 
 	includedPlantUml := mapset.NewSet()
-	// status := make(map[int]int)
+	included := mapset.NewSet()
+
 	var initial, final int
 	s.Output = append(s.Output, "@startuml\n")
 	init := true
@@ -80,8 +81,13 @@ func (s *seqStruct) Process() {
 				s.Output = append(s.Output, fmt.Sprintf("[*] --> Query_%d\n", final))
 				init = false
 			} else {
-				includedPlantUml.Add(fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
-				s.Output = append(s.Output, fmt.Sprintf("Query_%d -> Query_%d\n", initial, final))
+				if included.Contains(initial) {
+					includedPlantUml.Add(fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
+					s.Output = append(s.Output, fmt.Sprintf("Query_%d -right-> Query_%d\n", initial, final))
+				} else {
+					includedPlantUml.Add(fmt.Sprintf("Query_%d -down-> Query_%d\n", initial, final))
+					s.Output = append(s.Output, fmt.Sprintf("Query_%d -down-> Query_%d\n", initial, final))
+				}
 				if s.SeqStrings[i] != "" {
 
 					m := spaces.ReplaceAll([]byte(s.SeqStrings[i]), []byte{' '})
@@ -97,8 +103,10 @@ func (s *seqStruct) Process() {
 			}
 			initial = final
 		}
+
+		included.Add(initial)
 	}
-	s.Output = append(s.Output, fmt.Sprintf("Query_%d -> %s\n@enduml\n", initial, "[*]"))
+	s.Output = append(s.Output, fmt.Sprintf("Query_%d --> %s\n@enduml\n", initial, "[*]"))
 }
 
 type msgStruct struct {
