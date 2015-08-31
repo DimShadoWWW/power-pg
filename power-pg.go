@@ -401,10 +401,10 @@ func logReport() {
 			if err != nil {
 				panic(err)
 			}
-			_, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content) + `\input{test.tex}` + "\n")
-			if err != nil {
-				log.Fatalf("log failed: %v", err)
-			}
+			// _, err = f.WriteString(fmt.Sprintf("# %s\n", msg.Content) + `\input{test.tex}` + "\n")
+			// if err != nil {
+			// 	log.Fatalf("log failed: %v", err)
+			// }
 			f.Close()
 			idx = 0
 
@@ -543,8 +543,8 @@ func logReport() {
 									template = utils.GetVariables(string(q1), string(q2))
 								}
 								graph.SeqStrings[int(kI)] = template
-							} else {
-								graph.SeqStrings[int(kI)] = string(q1)
+								// } else {
+								// 	graph.SeqStrings[int(kI)] = string(q1)
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
