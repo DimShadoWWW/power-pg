@@ -609,6 +609,7 @@ func logReport() {
 						if err != nil {
 							log.Fatalf("ERROR: %v", err)
 						}
+						log.Warning("thisQueryTime: %#v\n", thisQueryTime)
 
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
