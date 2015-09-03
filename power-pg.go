@@ -624,7 +624,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", thisQueryTime))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -643,7 +643,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", thisQueryTime))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -661,7 +661,7 @@ func logReport() {
 								}
 							} else {
 								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-									m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s\n", thisQueryTime))
+									m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s\n", string(thisQueryTime)))
 									m1 = append(m1, []byte(v)[:]...)
 									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1)}
 								} else {
