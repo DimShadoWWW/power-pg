@@ -604,8 +604,12 @@ func logReport() {
 						sqlIdx := v[:30]
 
 						b3 := b.Bucket([]byte("times"))
+						log.Warning("string(k): %#v\n", k)
 						c3 := b3.Cursor()
+						log.Warning("string(k): %#v\n", k)
 						thisQueryTime, err := c3.Seek(k)
+						log.Warning("string(k): %#v\n", k)
+
 						if err != nil {
 							log.Fatalf("ERROR: %v", err)
 						}
