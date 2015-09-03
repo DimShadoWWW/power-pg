@@ -641,7 +641,7 @@ func logReport() {
 										template := utils.GetVariables(string(q1), string(q2))
 
 										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", thisQueryTime))
-										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
 										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
