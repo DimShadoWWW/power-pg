@@ -605,7 +605,10 @@ func logReport() {
 
 						b3 := b.Bucket([]byte("times"))
 						c3 := b3.Cursor()
-						thisQueryTime, _ := c3.Seek(k)
+						thisQueryTime, err := c3.Seek(k)
+						if err != nil {
+							log.Fatalf("ERROR: %v", err)
+						}
 
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
@@ -658,7 +661,9 @@ func logReport() {
 								}
 							} else {
 								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-									msgOut <- msgStruct{Type: "S", ID: s, Content: string(v)}
+									m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s\n", thisQueryTime))
+									m1 = append(m1, []byte(v)[:]...)
+									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1)}
 								} else {
 									log.Fatalf("failed to convert str to int64: %v", err)
 								}
