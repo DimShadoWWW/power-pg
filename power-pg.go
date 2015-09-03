@@ -138,6 +138,8 @@ var (
 	msgOut   = make(chan msgStruct, 100)
 
 	log = logging.MustGetLogger("")
+
+	firstChannelCallTime time.Time
 )
 
 func main() {
@@ -245,6 +247,7 @@ func callURIs() {
 			// send message for new channel
 			msgOut <- msgStruct{Type: "C", Content: scanner.Text()}
 
+			firstChannelCallTime = time.Now()
 			resp, body, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 			if errs != nil {
 				log.Fatalf("log failed: %v", errs)
@@ -382,8 +385,7 @@ func baseLog() {
 }
 
 func logReport() {
-	// var f *os.File
-	//
+	lastCallTime := firstChannelCallTime
 
 	spaces := regexp.MustCompile("[ \r\t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
@@ -417,6 +419,8 @@ func logReport() {
 
 			// receive SQL Query
 		case "M":
+			now := time.Now()
+
 			log.Debug("Receiving SQL")
 			log.Info("0")
 			idx++
@@ -430,6 +434,8 @@ func logReport() {
 					log.Warning("create bucket: %s", err)
 					return fmt.Errorf("create bucket: %s", err)
 				}
+
+				// query
 				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
 				if err != nil {
 					log.Warning("failed to create bucket queries\n")
@@ -440,6 +446,8 @@ func logReport() {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+
+				// query alikes
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
 				if err != nil {
 					log.Warning("failed to create bucket %s\n", string(sqlIdx))
@@ -449,6 +457,19 @@ func logReport() {
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, string(sqlIdx), err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, string(sqlIdx), err)
+				}
+
+				// times
+				b3, err := b.CreateBucketIfNotExists([]byte("times"))
+				if err != nil {
+					log.Warning("failed to create bucket queries\n")
+					return fmt.Errorf("failed to create bucket queries\n")
+				}
+
+				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(now.Sub(lastCallTime).String()))
+				if err != nil {
+					log.Warning("put %s on bucket %s: %s", m, "queries", err)
+					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
 				return nil
 			})
@@ -558,25 +579,12 @@ func logReport() {
 								log.Fatalf("failed to convert str to int64: %v", err)
 							}
 							graph.Seq = append(graph.Seq, int(k1Int))
-							// }
 						}
-						// c1 := b2.Cursor()
-						// k1, _ := c1.First()
-						//
-						// k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
-						// if err != nil {
-						// 	log.Fatalf("failed to convert str to int64: %v", err)
-						// }
-						// graph.Seq = append(graph.Seq, int(k1Int))
 					}
 				}
 				return nil
 			})
-			// output := tarjan.Connections(graph)
-			log.Debug("aaaa")
 			graph.Process()
-			log.Debug("bbbb")
-
 			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE, 0777)
 			for _, st := range graph.Output {
 				_, err = f.WriteString(st)
@@ -584,21 +592,20 @@ func logReport() {
 					log.Fatalf("log failed: %v", err)
 				}
 			}
-
 			f.Close()
-			// msgOut <- msgStruct{Type: "S", Content: fmt.Sprintf("%v\n", output)}
-			// fmt.Println(output)
-			//
 
 			err = db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
-
 				b1 := b.Bucket([]byte("queries"))
 				if b1 != nil {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
 						log.Warning("string(k): %#v\n", k)
 						sqlIdx := v[:30]
+
+						b3 := b.Bucket([]byte("times"))
+						c3 := b3.Cursor()
+						thisQueryTime, _ := c3.Seek(k)
 
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
@@ -614,7 +621,8 @@ func logReport() {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", thisQueryTime))
+										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
 										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
@@ -632,7 +640,8 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", thisQueryTime))
+										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
 										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
