@@ -466,6 +466,8 @@ func logReport() {
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
 
+				log.Warning("Running time: %s\n", now.Sub(lastCallTime).String())
+
 				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(now.Sub(lastCallTime).String()))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
