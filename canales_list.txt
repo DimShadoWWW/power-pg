@@ -1,2 +1,1 @@
-deportes.todos.agenda.losandes_tenis
 deportes.tenis.copadavis.fixture.2
