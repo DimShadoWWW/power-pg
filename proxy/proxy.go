@@ -22,7 +22,7 @@ var (
 type Pkg struct {
 	Type    byte
 	Content []byte
-	Time    time.Time
+	Time    time.Duration
 }
 
 // Start function
@@ -116,17 +116,17 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 
 	// spaces := regexp.MustCompile("[\n\t ]+")
 	if islocal {
+		lastExecTime := time.Now()
 		for {
 			remainingBytes := 0
 			var r ReadBuf
-			now := time.Now()
 
-			// fmt.Println("1111")
 			n, err := src.Read(buff)
 			if err != nil {
 				p.err("Read failed '%s'\n", err)
 				return
 			}
+			now := time.Now()
 
 			// if msgBytes != nil {
 			// log.Debug("Readed bytes: %d\n", n)
@@ -169,7 +169,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 							msgCh <- Pkg{
 								Type:    t,
 								Content: msg,
-								Time:    now,
+								Time:    now.Sub(lastExecTime),
 							}
 						}
 					}
@@ -181,12 +181,12 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 						msgCh <- Pkg{
 							Type:    t,
 							Content: r,
-							Time:    now,
+							Time:    now.Sub(lastExecTime),
 						}
 					}
 				}
 			}
-
+			lastExecTime = now
 			log.Debug("Going to next query\n")
 			// fmt.Println("8")
 		}

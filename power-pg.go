@@ -116,11 +116,12 @@ func (s *seqStruct) Process() {
 }
 
 type msgStruct struct {
-	Type    string
-	ID      int64
-	Content string
-	Time    time.Time
-	TimeStr string
+	Type      string
+	ID        int64
+	Content   string
+	Time      time.Duration
+	TimeStr   string
+	TimeTotal time.Duration
 }
 
 type sqlStruct struct {
@@ -397,7 +398,6 @@ func logReport() {
 	// var sqlIndex sqlStructList
 
 	var idx int64
-	var lastCallTime time.Time
 	channel := ""
 
 	for msg := range msgOut {
@@ -405,7 +405,6 @@ func logReport() {
 		switch msg.Type {
 		// New file
 		case "C":
-			lastCallTime = time.Now()
 			log.Debug("CHANNEL")
 			channel = msg.Content
 
@@ -424,8 +423,6 @@ func logReport() {
 
 			// receive SQL Query
 		case "M":
-			executionTime := msg.Time.Sub(lastCallTime).String()
-			lastCallTime = msg.Time
 			log.Debug("Receiving SQL")
 			log.Info("0")
 			idx++
@@ -471,11 +468,9 @@ func logReport() {
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
 
-				log.Warning("Running time: %s\n", executionTime)
-				log.Warning("Time Now: %s\n", msg.Time)
-				log.Warning("Time last Call: %s\n", lastCallTime)
+				log.Warning("Running time: %s\n", msg.Time.String())
 
-				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(executionTime))
+				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(msg.Time.String()))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
@@ -617,8 +612,7 @@ func logReport() {
 						// log.Warning("string(k): %#v\n", k)
 						c3 := b3.Cursor()
 						// log.Warning("string(k): %#v\n", k)
-						kkk, thisQueryTime := c3.Seek(k)
-						log.Debug("kkk: %s\n", string(kkk))
+						_, thisQueryTime := c3.Seek(k)
 						log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
 
 						b2 := b.Bucket(sqlIdx)
@@ -627,6 +621,18 @@ func logReport() {
 							if b2.Stats().KeyN > 1 {
 								if !included.Contains(string(sqlIdx)) {
 									c1 := b2.Cursor()
+									totalTime := int64(0)
+									count := int64(0)
+									for _, v := c3.First(); k != nil; k, v = c.Next() {
+										count++
+										dur, err := time.ParseDuration(string(v))
+										if err != nil {
+											dur = 0
+										}
+										totalTime += int64(dur)
+									}
+									promTime := totalTime / count
+
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
@@ -635,7 +641,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo: %s\n", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %d\ntiempo total: %d\n", promTime, totalTime))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -654,7 +660,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo: %s\n", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %d\ntiempo total: %d\n", promTime, totalTime))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
