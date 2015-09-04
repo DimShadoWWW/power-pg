@@ -467,6 +467,8 @@ func logReport() {
 				}
 
 				log.Warning("Running time: %s\n", now.Sub(lastCallTime).String())
+				log.Warning("Time Now: %s\n", now)
+				log.Warning("Time last Call: %s\n", lastCallTime)
 
 				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(now.Sub(lastCallTime).String()))
 				if err != nil {
