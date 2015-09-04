@@ -616,7 +616,7 @@ func logReport() {
 						// log.Warning("string(k): %#v\n", k)
 						kkk, thisQueryTime := c3.Seek(k)
 						log.Debug("kkk: %s\n", string(kkk))
-						log.Warning("thisQueryTime: %#v\n", thisQueryTime)
+						log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
 
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
@@ -632,7 +632,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s\n", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -651,7 +651,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %\n", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
