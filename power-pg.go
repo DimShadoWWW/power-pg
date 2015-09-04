@@ -242,12 +242,12 @@ func callURIs() {
 		scanner.Split(bufio.ScanLines)
 
 		for scanner.Scan() {
+			firstChannelCallTime = time.Now()
 			time.Sleep(time.Millisecond * 1500)
 
 			// send message for new channel
 			msgOut <- msgStruct{Type: "C", Content: scanner.Text()}
 
-			firstChannelCallTime = time.Now()
 			resp, body, errs := gorequest.New().Get(fmt.Sprintf("%s%s", *remoteService, scanner.Text())).End()
 			if errs != nil {
 				log.Fatalf("log failed: %v", errs)
@@ -385,7 +385,6 @@ func baseLog() {
 }
 
 func logReport() {
-	lastCallTime := firstChannelCallTime
 
 	spaces := regexp.MustCompile("[ \r\t\n]+")
 	// pdo_stmt_ := regexp.MustCompile("pdo_stmt_[0-9a-fA-F]{8}")
@@ -394,6 +393,7 @@ func logReport() {
 	// var sqlIndex sqlStructList
 
 	var idx int64
+	var lastCallTime time.Time
 	channel := ""
 
 	for msg := range msgOut {
@@ -401,6 +401,7 @@ func logReport() {
 		switch msg.Type {
 		// New file
 		case "C":
+			lastCallTime = time.Unix(firstChannelCallTime.Unix(), 0)
 			log.Debug("CHANNEL")
 			channel = msg.Content
 
