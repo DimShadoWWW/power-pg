@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/DimShadoWWW/power-pg/common"
 	"github.com/op/go-logging"
@@ -21,6 +22,7 @@ var (
 type Pkg struct {
 	Type    byte
 	Content []byte
+	Time    time.Time
 }
 
 // Start function
@@ -166,6 +168,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 							msgCh <- Pkg{
 								Type:    t,
 								Content: msg,
+								Time:    time.Now(),
 							}
 						}
 					}
@@ -177,6 +180,7 @@ func (p *proxy) pipe(src, dst net.TCPConn, msgBytes chan []byte, msgCh chan Pkg,
 						msgCh <- Pkg{
 							Type:    t,
 							Content: r,
+							Time:    time.Now(),
 						}
 					}
 				}

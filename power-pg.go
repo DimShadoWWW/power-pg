@@ -117,6 +117,7 @@ type msgStruct struct {
 	Type    string
 	ID      int64
 	Content string
+	Time    time.Time
 }
 
 type sqlStruct struct {
@@ -401,7 +402,7 @@ func logReport() {
 		switch msg.Type {
 		// New file
 		case "C":
-			lastCallTime = time.Unix(firstChannelCallTime.Unix(), 0)
+			lastCallTime = time.Now()
 			log.Debug("CHANNEL")
 			channel = msg.Content
 
@@ -467,8 +468,8 @@ func logReport() {
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
 
-				log.Warning("Running time: %s\n", now.Sub(lastCallTime).String())
-				log.Warning("Time Now: %s\n", now)
+				log.Warning("Running time: %s\n", msg.Time.Sub(lastCallTime).String())
+				log.Warning("Time Now: %s\n", msg.Time)
 				log.Warning("Time last Call: %s\n", lastCallTime)
 
 				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(now.Sub(lastCallTime).String()))
@@ -739,7 +740,7 @@ func base() {
 					temp = tmp
 				}
 			case byte('Q'):
-				msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content, "\x00"))}
+				msgOut <- msgStruct{Type: "M", Content: string(bytes.Trim(msg.Content, "\x00")), Time: msg.Time}
 			case byte('B'):
 				pkg := handleBType(temp, msg)
 				msgOut <- pkg
@@ -921,5 +922,5 @@ func handleBType(temp string, msg proxy.Pkg) msgStruct {
 	// } else {
 	// }
 
-	return msgStruct{Type: "M", Content: temp}
+	return msgStruct{Type: "M", Content: temp, Time: msg.Time}
 }
