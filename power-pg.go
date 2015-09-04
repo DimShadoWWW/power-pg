@@ -424,6 +424,8 @@ func logReport() {
 
 			// receive SQL Query
 		case "M":
+			executionTime := msg.Time.Sub(lastCallTime).String()
+			lastCallTime = msg.Time
 			log.Debug("Receiving SQL")
 			log.Info("0")
 			idx++
@@ -469,11 +471,11 @@ func logReport() {
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
 
-				log.Warning("Running time: %s\n", msg.Time.Sub(lastCallTime).String())
+				log.Warning("Running time: %s\n", executionTime)
 				log.Warning("Time Now: %s\n", msg.Time)
 				log.Warning("Time last Call: %s\n", lastCallTime)
 
-				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(msg.Time.Sub(lastCallTime).String()))
+				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(executionTime))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
@@ -484,15 +486,13 @@ func logReport() {
 				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
 
-			lastCallTime = msg.Time
-
 			// SQL Query
 		case "S":
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 
 			var m1 = []byte(fmt.Sprintf("\n"+`{\Large Query No.`+" %d}\n", msg.ID) +
-				"\n***\n" + fmt.Sprintf("tiempo de ejecución: '%s'", msg.TimeStr) +
+				"\n***\n" + fmt.Sprintf("tiempo de ejecución: $%s$", msg.TimeStr) +
 				"\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
@@ -635,7 +635,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: '%s'\n", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: $%s$\n", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -654,7 +654,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: '%s'\n", string(thisQueryTime)))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: $%s$\n", string(thisQueryTime)))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
