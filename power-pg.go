@@ -40,7 +40,7 @@ var (
 
 	baseDir       = flag.String("b", "/", "directorio base para archivos")
 	localHost     = flag.String("l", ":5432", "puerto local para escuchar")
-	dbHostname    = flag.String("h", "localhost", "hostname del servidor PostgreSQL")
+	dbHostname    = flag.String("H", "localhost", "hostname del servidor PostgreSQL")
 	dbPort        = flag.String("r", "5432", "puerto del servidor PostgreSQL")
 	dbName        = flag.String("d", "dbname", "nombre de la base de datos")
 	dbUsername    = flag.String("u", "username", "usuario para acceder al servidor PostgreSQL")
@@ -146,6 +146,8 @@ var (
 )
 
 func main() {
+	flag.Parse()
+
 	defer chownDir(fmt.Sprintf("%s/reports/", *baseDir), 1000, 1000)
 
 	dbTempPath := "/db"
@@ -166,8 +168,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
-	flag.Parse()
 
 	logBackend := logging.NewLogBackend(os.Stdout, "", 0)
 	logBackendFormatter := logging.NewBackendFormatter(logBackend,
