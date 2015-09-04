@@ -611,7 +611,7 @@ func logReport() {
 						log.Warning("string(k): %#v\n", k)
 
 						if err != nil {
-							log.Fatalf("ERROR: %v", err)
+							log.Debug("ERROR: %v", err)
 						}
 						log.Warning("thisQueryTime: %#v\n", thisQueryTime)
 
