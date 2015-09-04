@@ -120,6 +120,7 @@ type msgStruct struct {
 	ID      int64
 	Content string
 	Time    time.Time
+	TimeStr string
 }
 
 type sqlStruct struct {
@@ -485,13 +486,16 @@ func logReport() {
 				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
 
+			lastCallTime = time.Now()
+
 			// SQL Query
 		case "S":
 			log.Debug("SQL")
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 
 			var m1 = []byte(fmt.Sprintf("\n"+`{\Large Query No.`+" %d}\n", msg.ID) +
-				"\n***\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
+				"\n***\n" + fmt.Sprintf("tiempo de ejecución: %s", msg.TimeStr) +
+				"\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
 			f, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
@@ -670,9 +674,8 @@ func logReport() {
 								}
 							} else {
 								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-									m1 := []byte(fmt.Sprintf("\n\ntiempo de ejecución: %s\n", string(thisQueryTime)))
-									m1 = append(m1, []byte(v)[:]...)
-									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1)}
+									m1 := []byte(v)
+									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
 								} else {
 									log.Fatalf("failed to convert str to int64: %v", err)
 								}
