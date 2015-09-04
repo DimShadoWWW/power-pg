@@ -605,15 +605,15 @@ func logReport() {
 				if b1 != nil {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
-						log.Warning("string(k): %#v\n", k)
+						// log.Warning("string(k): %#v\n", k)
 						sqlIdx := v[:30]
 
 						b3 := b.Bucket([]byte("times"))
-						log.Warning("string(k): %#v\n", k)
+						// log.Warning("string(k): %#v\n", k)
 						c3 := b3.Cursor()
-						log.Warning("string(k): %#v\n", k)
+						// log.Warning("string(k): %#v\n", k)
 						thisQueryTime, err := c3.Seek(k)
-						log.Warning("string(k): %#v\n", k)
+						// log.Warning("string(k): %#v\n", k)
 
 						if err != nil {
 							log.Debug("ERROR: %v", err)
