@@ -112,6 +112,7 @@ func (s *seqStruct) Process() {
 		included.Add(initial)
 	}
 	s.Output = append(s.Output, fmt.Sprintf("Query_%d --> %s\n@enduml\n", initial, "[*]"))
+	log.Debug("66\n")
 }
 
 type msgStruct struct {
