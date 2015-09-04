@@ -104,6 +104,7 @@ func (s *seqStruct) Process() {
 						s.Output = append(s.Output, fmt.Sprintf("Query_%d : %s\n", initial, string(v)))
 						// }
 					}
+					log.Debug("55\n")
 				}
 			}
 			initial = final
@@ -613,12 +614,8 @@ func logReport() {
 						// log.Warning("string(k): %#v\n", k)
 						c3 := b3.Cursor()
 						// log.Warning("string(k): %#v\n", k)
-						thisQueryTime, err := c3.Seek(k)
-						// log.Warning("string(k): %#v\n", k)
-
-						if err != nil {
-							log.Debug("ERROR: %v", err)
-						}
+						kkk, thisQueryTime := c3.Seek(k)
+						log.Debug("kkk: %s\n", string(kkk))
 						log.Warning("thisQueryTime: %#v\n", thisQueryTime)
 
 						b2 := b.Bucket(sqlIdx)
