@@ -424,8 +424,6 @@ func logReport() {
 
 			// receive SQL Query
 		case "M":
-			now := time.Now()
-
 			log.Debug("Receiving SQL")
 			log.Info("0")
 			idx++
@@ -475,7 +473,7 @@ func logReport() {
 				log.Warning("Time Now: %s\n", msg.Time)
 				log.Warning("Time last Call: %s\n", lastCallTime)
 
-				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(now.Sub(lastCallTime).String()))
+				err = b3.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(msg.Time.Sub(lastCallTime).String()))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
@@ -486,7 +484,7 @@ func logReport() {
 				log.Fatal(fmt.Sprintf("Failed to db: %s", err))
 			}
 
-			lastCallTime = time.Now()
+			lastCallTime = msg.Time
 
 			// SQL Query
 		case "S":
@@ -556,7 +554,7 @@ func logReport() {
 			//
 			// includedPlantUml := mapset.NewSet()
 			graph.SeqStrings = make(map[int]string)
-			// graph["1"] = []interface{}{"2"}
+
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 
