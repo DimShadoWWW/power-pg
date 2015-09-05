@@ -605,7 +605,7 @@ func logReport() {
 				if b1 != nil {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
-						log.Warning("string(k): %#v\n", k)
+						// log.Warning("string(k): %#v\n", k)
 						sqlIdx := v[:30]
 
 						b3 := b.Bucket([]byte("times"))
@@ -623,7 +623,7 @@ func logReport() {
 									c1 := b2.Cursor()
 									totalTime := int64(0)
 									count := int64(0)
-									for _, v := c3.First(); k != nil; k, v = c.Next() {
+									for k1, v := c3.First(); k1 != nil; k1, v = c3.Next() {
 										count++
 										dur, err := time.ParseDuration(string(v))
 										if err != nil {
