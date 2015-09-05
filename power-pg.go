@@ -632,6 +632,7 @@ func logReport() {
 										}
 										totalTime += int64(dur)
 									}
+									// math.Float64bits(
 									promTime := totalTime / count
 
 									_, q1 := c1.First()
@@ -639,12 +640,12 @@ func logReport() {
 
 									promTimeDur, err := time.ParseDuration(string(promTime))
 									if err != nil {
-										log.Fatalf("failure parsing duration 2 %#v\n", v)
+										log.Fatalf("failure parsing duration 2 %s\n%s\n", v, err)
 									}
 
 									totalTimeDur, err := time.ParseDuration(string(totalTime))
 									if err != nil {
-										log.Fatalf("failure parsing duration 3 %#v\n", v)
+										log.Fatalf("failure parsing duration 3 %s\n%s\n", v, err)
 									}
 
 									if bytes.Equal(q1, q2) {
