@@ -487,7 +487,7 @@ func logReport() {
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 
 			var m1 = []byte(fmt.Sprintf("\n"+`{\Large Query No.`+" %d}\n", msg.ID) +
-				"\n***\n" + fmt.Sprintf("tiempo: %s", msg.TimeStr) +
+				"\n***\n" + fmt.Sprintf("tiempo: %s", msg.Time.String()) +
 				"\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0,\n")
 			m1 = append(m1, m[:]...)
 			m1 = append(m1, []byte("\n```\n")[:]...)
@@ -565,7 +565,7 @@ func logReport() {
 							k1, q1 := c1.First()
 							kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
 							if err != nil {
-								log.Fatalf("failed to convert str to int64 1: %v", err)
+								log.Fatalf("failed to convert str to int64: %v", err)
 							}
 							// has many
 							if b2.Stats().KeyN > 1 {
@@ -581,7 +581,7 @@ func logReport() {
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
-								log.Fatalf("failed to convert str to int64 2: %v", err)
+								log.Fatalf("failed to convert str to int64: %v", err)
 							}
 							graph.Seq = append(graph.Seq, int(k1Int))
 						}
@@ -646,6 +646,7 @@ func logReport() {
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
 										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+										log.Warning("k: %#v\n", k)
 										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 											msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
 												`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
@@ -672,7 +673,7 @@ func logReport() {
 												string(q1) + "\n" + string(q2) +
 												"\n```\n" + `\end{minipage}` + "\n\n"}
 										} else {
-											log.Fatalf("failed to convert str to int64 4: %v", err)
+											log.Fatalf("failed to convert str to int64: %v", err)
 										}
 									}
 								}
@@ -681,7 +682,7 @@ func logReport() {
 									m1 := []byte(v)
 									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
 								} else {
-									log.Fatalf("failed to convert str to int64 5: %v", err)
+									log.Fatalf("failed to convert str to int64: %v", err)
 								}
 							}
 						}
