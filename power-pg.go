@@ -636,12 +636,21 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									if bytes.Equal(q1, q2) {
+									promTimeDur, err := time.ParseDuration(string(promTime))
+									if err != nil {
+										log.Fatal(err)
+									}
 
+									totalTimeDur, err := time.ParseDuration(string(totalTime))
+									if err != nil {
+										log.Fatal(err)
+									}
+
+									if bytes.Equal(q1, q2) {
 										// generate template comparing first and last values
 										template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %d\ntiempo total: %d\n", promTime, totalTime))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
@@ -661,7 +670,7 @@ func logReport() {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %d\ntiempo total: %d\n", promTime, totalTime))
+										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
 										m1 = append(m1, []byte(template)[:]...)
 										m1 = append(m1, []byte("\n```\n")[:]...)
