@@ -638,7 +638,7 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									totalTimeDur, err := time.ParseDuration(string(totalTime) + "ns")
+									totalTimeDur, err := time.ParseDuration(string(totalTime))
 									if err != nil {
 										log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
 									}
