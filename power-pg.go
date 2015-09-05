@@ -634,10 +634,10 @@ func logReport() {
 										totalTime += int64(dur)
 									}
 
+									promTime := totalTime / count
 									log.Warning("totalTime: %#v\n", totalTime)
 									log.Warning("promTime: %#v\n", promTime)
 									log.Warning("count: %#v\n", count)
-									promTime := totalTime / count
 
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
