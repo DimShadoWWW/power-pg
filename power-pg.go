@@ -605,7 +605,7 @@ func logReport() {
 				if b1 != nil {
 					c := b1.Cursor()
 					for k, v := c.First(); k != nil; k, v = c.Next() {
-						// log.Warning("string(k): %#v\n", k)
+						log.Warning("string(k): %#v\n", k)
 						sqlIdx := v[:30]
 
 						b3 := b.Bucket([]byte("times"))
