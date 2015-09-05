@@ -638,14 +638,16 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									totalTimeDur, err := time.ParseDuration(string(totalTime))
-									if err != nil {
-										log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
-									}
-									promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
-									if err != nil {
-										log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
-									}
+									totalTimeDur := time.Unix(totalTime, 0).Sub(time.Unix(int64(0), 0))
+									promTimeDur := time.Unix(promTime, 0).Sub(time.Unix(int64(0), 0))
+									// totalTimeDur, err := time.ParseDuration(string(totalTime))
+									// if err != nil {
+									// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
+									// }
+									// promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
+									// if err != nil {
+									// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
+									// }
 
 									if bytes.Equal(q1, q2) {
 										// generate template comparing first and last values
