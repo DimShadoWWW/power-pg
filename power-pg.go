@@ -640,12 +640,12 @@ func logReport() {
 
 									promTimeDur, err := time.ParseDuration(string(promTime))
 									if err != nil {
-										log.Fatalf("failure parsing duration 2 %s\n%s\n", v, err)
+										log.Fatalf("failure parsing duration 2 %s\n%s\n", promTime, err)
 									}
 
 									totalTimeDur, err := time.ParseDuration(string(totalTime))
 									if err != nil {
-										log.Fatalf("failure parsing duration 3 %s\n%s\n", v, err)
+										log.Fatalf("failure parsing duration 3 %s\n%s\n", totalTime, err)
 									}
 
 									if bytes.Equal(q1, q2) {
