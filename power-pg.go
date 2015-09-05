@@ -638,8 +638,8 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									log.Warning("totalTimeDur: %#v\n", totalTimeDur)
-									log.Warning("promTimeDur: %#v\n", promTimeDur)
+									log.Warning("totalTimeDur: %#v\n", totalTime)
+									log.Warning("promTimeDur: %#v\n", promTime)
 									totalTimeDur := time.Unix(totalTime, 0).Sub(time.Unix(int64(0), 0))
 									promTimeDur := time.Unix(promTime, 0).Sub(time.Unix(int64(0), 0))
 									// totalTimeDur, err := time.ParseDuration(string(totalTime))
