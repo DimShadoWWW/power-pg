@@ -676,6 +676,9 @@ func logReport() {
 									} else {
 										// generate template comparing first and last values
 										template := utils.GetVariables(string(q1), string(q2))
+										log.Debug("q1: %s\n", q1)
+										log.Debug("q2: %s\n", q2)
+										log.Debug("template: %s\n", template)
 
 										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
 										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
