@@ -638,12 +638,12 @@ func logReport() {
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									promTimeDur, err := time.ParseDuration(string(promTime))
+									promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
 									if err != nil {
 										log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
 									}
 
-									totalTimeDur, err := time.ParseDuration(string(totalTime))
+									totalTimeDur, err := time.ParseDuration(string(totalTime) + "ns")
 									if err != nil {
 										log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
 									}
