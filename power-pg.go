@@ -640,8 +640,8 @@ func logReport() {
 
 									log.Warning("totalTimeDur: %#v\n", totalTime)
 									log.Warning("promTimeDur: %#v\n", promTime)
-									totalTimeDur := time.Unix(totalTime, 0).Sub(time.Unix(int64(0), 0))
-									promTimeDur := time.Unix(promTime, 0).Sub(time.Unix(int64(0), 0))
+									totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
+									promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
 									// totalTimeDur, err := time.ParseDuration(string(totalTime))
 									// if err != nil {
 									// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
