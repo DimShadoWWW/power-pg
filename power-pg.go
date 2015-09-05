@@ -681,9 +681,9 @@ func logReport() {
 										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 											msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
 												`> $\uparrow$ Esto es una plantilla que se repite ` + strconv.Itoa(b2.Stats().KeyN) +
-												` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
-												string(q1) + "\n" + string(q2) +
-												"\n```\n" + `\end{minipage}` + "\n\n"}
+												` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n'" +
+												string(q1) + "'\n'" + string(q2) +
+												"'\n```\n" + `\end{minipage}` + "\n\n"}
 										} else {
 											log.Fatalf("failed to convert str to int64: %v", err)
 										}
