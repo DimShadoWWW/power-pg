@@ -462,7 +462,7 @@ func logReport() {
 				}
 
 				// times
-				b3, err := b.CreateBucketIfNotExists([]byte("times"))
+				b3, err := b2.CreateBucketIfNotExists([]byte("times"))
 				if err != nil {
 					log.Warning("failed to create bucket queries\n")
 					return fmt.Errorf("failed to create bucket queries\n")
@@ -608,15 +608,13 @@ func logReport() {
 						// log.Warning("string(k): %#v\n", k)
 						sqlIdx := v[:30]
 
-						b3 := b.Bucket([]byte("times"))
-						// log.Warning("string(k): %#v\n", k)
-						c3 := b3.Cursor()
-						// log.Warning("string(k): %#v\n", k)
-						_, thisQueryTime := c3.Seek(k)
-						log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
-
 						b2 := b.Bucket(sqlIdx)
 						if b2 != nil {
+							b3 := b2.Bucket([]byte("times"))
+							c3 := b3.Cursor()
+							_, thisQueryTime := c3.Seek(k)
+							log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
+
 							// has many
 							if b2.Stats().KeyN > 1 {
 								if !included.Contains(string(sqlIdx)) {
