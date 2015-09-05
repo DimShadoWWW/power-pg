@@ -614,11 +614,15 @@ func logReport() {
 							c3 := b3.Cursor()
 							_, thisQueryTime := c3.Seek(k)
 							log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
+							c1i := b2.Cursor()
+							c1i.First()
+							_, v22 := c1i.Next()
 
 							// has many
-							if b2.Stats().KeyN > 1 {
+							if b2.Stats().KeyN > 1 || (b2.Stats().KeyN != 2 && len(v22) != 0) {
 								if !included.Contains(string(sqlIdx)) {
 									c1 := b2.Cursor()
+
 									totalTime := int64(0)
 									count := int64(0)
 									for k1, v := c3.First(); k1 != nil; k1, v = c3.Next() {
