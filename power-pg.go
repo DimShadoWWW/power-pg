@@ -401,7 +401,7 @@ func logReport() {
 	channel := ""
 
 	for msg := range msgOut {
-		log.Debug("+")
+		// log.Debug("+")
 		switch msg.Type {
 		// New file
 		case "C":
@@ -424,7 +424,6 @@ func logReport() {
 			// receive SQL Query
 		case "M":
 			log.Debug("Receiving SQL")
-			log.Info("0")
 			idx++
 			m := spaces.ReplaceAll([]byte(msg.Content), []byte{' '})
 			m = multipleSpaces.ReplaceAll(m, []byte{' '})
@@ -634,16 +633,19 @@ func logReport() {
 										}
 										totalTime += int64(dur)
 									}
-									// math.Float64bits(
+
+									log.Warning("totalTime: %#v\n", totalTime)
+									log.Warning("promTime: %#v\n", promTime)
+									log.Warning("count: %#v\n", count)
 									promTime := totalTime / count
 
 									_, q1 := c1.First()
 									_, q2 := c1.Last()
 
-									log.Warning("totalTimeDur: %#v\n", totalTime)
-									log.Warning("promTimeDur: %#v\n", promTime)
 									totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
 									promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
+									log.Warning("totalTimeDur: %#v\n", totalTimeDur)
+									log.Warning("promTimeDur: %#v\n", promTimeDur)
 									// totalTimeDur, err := time.ParseDuration(string(totalTime))
 									// if err != nil {
 									// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
