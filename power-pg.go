@@ -565,7 +565,7 @@ func logReport() {
 							k1, q1 := c1.First()
 							kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
 							if err != nil {
-								log.Fatalf("failed to convert str to int64: %v", err)
+								log.Fatalf("failed to convert str to int64 1: %v", err)
 							}
 							// has many
 							if b2.Stats().KeyN > 1 {
@@ -581,7 +581,7 @@ func logReport() {
 							}
 							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
 							if err != nil {
-								log.Fatalf("failed to convert str to int64: %v", err)
+								log.Fatalf("failed to convert str to int64 2: %v", err)
 							}
 							graph.Seq = append(graph.Seq, int(k1Int))
 						}
@@ -654,7 +654,7 @@ func logReport() {
 												string(q1) + "\n" + string(q2) +
 												"\n```\n" + `\end{minipage}` + "\n\n"}
 										} else {
-											log.Fatalf("failed to convert str to int64: %v", err)
+											log.Fatalf("failed to convert str to int64 3: %v", err)
 										}
 									} else {
 										// generate template comparing first and last values
@@ -672,7 +672,7 @@ func logReport() {
 												string(q1) + "\n" + string(q2) +
 												"\n```\n" + `\end{minipage}` + "\n\n"}
 										} else {
-											log.Fatalf("failed to convert str to int64: %v", err)
+											log.Fatalf("failed to convert str to int64 4: %v", err)
 										}
 									}
 								}
@@ -681,7 +681,7 @@ func logReport() {
 									m1 := []byte(v)
 									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
 								} else {
-									log.Fatalf("failed to convert str to int64: %v", err)
+									log.Fatalf("failed to convert str to int64 5: %v", err)
 								}
 							}
 						}
