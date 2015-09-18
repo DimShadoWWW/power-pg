@@ -601,114 +601,116 @@ func logReport() {
 
 			err = db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
-				b1 := b.Bucket([]byte("queries"))
-				if b1 != nil {
-					c := b1.Cursor()
-					for k, v := c.First(); k != nil; k, v = c.Next() {
-						// log.Warning("string(k): %#v\n", k)
-						sqlIdx := v[:30]
+				if b != nil {
+					b1 := b.Bucket([]byte("queries"))
+					if b1 != nil {
+						c := b1.Cursor()
+						for k, v := c.First(); k != nil; k, v = c.Next() {
+							// log.Warning("string(k): %#v\n", k)
+							sqlIdx := v[:30]
 
-						b2 := b.Bucket(sqlIdx)
-						if b2 != nil {
-							b3 := b2.Bucket([]byte("times"))
-							c3 := b3.Cursor()
-							_, thisQueryTime := c3.Seek(k)
-							log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
-							c1i := b2.Cursor()
-							c1i.First()
-							_, v22 := c1i.Next()
+							b2 := b.Bucket(sqlIdx)
+							if b2 != nil {
+								b3 := b2.Bucket([]byte("times"))
+								c3 := b3.Cursor()
+								_, thisQueryTime := c3.Seek(k)
+								log.Warning("thisQueryTime: %s\n", string(thisQueryTime))
+								c1i := b2.Cursor()
+								c1i.First()
+								_, v22 := c1i.Next()
 
-							// has many
-							if b2.Stats().KeyN > 1 || (b2.Stats().KeyN != 2 && len(v22) != 0) {
-								if !included.Contains(string(sqlIdx)) {
-									c1 := b2.Cursor()
+								// has many
+								if b2.Stats().KeyN > 1 || (b2.Stats().KeyN != 2 && len(v22) != 0) {
+									if !included.Contains(string(sqlIdx)) {
+										c1 := b2.Cursor()
 
-									totalTime := int64(0)
-									count := int64(0)
-									for k1, v := c3.First(); k1 != nil; k1, v = c3.Next() {
-										count++
-										dur, err := time.ParseDuration(string(v))
-										if err != nil {
-											log.Fatalf("failure parsing duration 1 %#v\n", v)
-											dur = 0
+										totalTime := int64(0)
+										count := int64(0)
+										for k1, v := c3.First(); k1 != nil; k1, v = c3.Next() {
+											count++
+											dur, err := time.ParseDuration(string(v))
+											if err != nil {
+												log.Fatalf("failure parsing duration 1 %#v\n", v)
+												dur = 0
+											}
+											totalTime += int64(dur)
 										}
-										totalTime += int64(dur)
-									}
 
-									promTime := totalTime / count
-									log.Warning("totalTime: %#v\n", totalTime)
-									log.Warning("promTime: %#v\n", promTime)
-									log.Warning("count: %#v\n", count)
+										promTime := totalTime / count
+										log.Warning("totalTime: %#v\n", totalTime)
+										log.Warning("promTime: %#v\n", promTime)
+										log.Warning("count: %#v\n", count)
 
-									_, q1 := c1.First()
-									_, q2 := c1.Last()
+										_, q1 := c1.First()
+										_, q2 := c1.Last()
 
-									totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
-									promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
-									log.Warning("totalTimeDur: %#v\n", totalTimeDur)
-									log.Warning("promTimeDur: %#v\n", promTimeDur)
-									// totalTimeDur, err := time.ParseDuration(string(totalTime))
-									// if err != nil {
-									// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
-									// }
-									// promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
-									// if err != nil {
-									// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
-									// }
+										totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
+										promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
+										log.Warning("totalTimeDur: %#v\n", totalTimeDur)
+										log.Warning("promTimeDur: %#v\n", promTimeDur)
+										// totalTimeDur, err := time.ParseDuration(string(totalTime))
+										// if err != nil {
+										// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
+										// }
+										// promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
+										// if err != nil {
+										// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
+										// }
 
-									if bytes.Equal(q1, q2) {
-										// generate template comparing first and last values
-										template := string(q1)
+										if bytes.Equal(q1, q2) {
+											// generate template comparing first and last values
+											template := string(q1)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
-										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
-										m1 = append(m1, []byte(template)[:]...)
-										m1 = append(m1, []byte("\n```\n")[:]...)
-										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-										log.Warning("k: %#v\n", k)
-										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-											msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
-												`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
-												` veces` + "\n\n" + `Ejemplos:` + "\n" +
-												`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
-												string(q1) + "\n" + string(q2) +
-												"\n```\n" + `\end{minipage}` + "\n\n"}
+											m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
+											m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
+											m1 = append(m1, []byte(template)[:]...)
+											m1 = append(m1, []byte("\n```\n")[:]...)
+											// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+											log.Warning("k: %#v\n", k)
+											if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+												msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
+													`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
+													` veces` + "\n\n" + `Ejemplos:` + "\n" +
+													`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
+													string(q1) + "\n" + string(q2) +
+													"\n```\n" + `\end{minipage}` + "\n\n"}
+											} else {
+												log.Fatalf("failed to convert str to int64 3: %v", err)
+											}
 										} else {
-											log.Fatalf("failed to convert str to int64 3: %v", err)
-										}
-									} else {
-										// generate template comparing first and last values
-										template := utils.GetVariables(string(q1), string(q2))
-										log.Debug("q1: %s\n", q1)
-										log.Debug("q2: %s\n", q2)
-										log.Debug("template: %s\n", template)
+											// generate template comparing first and last values
+											template := utils.GetVariables(string(q1), string(q2))
+											log.Debug("q1: %s\n", q1)
+											log.Debug("q2: %s\n", q2)
+											log.Debug("template: %s\n", template)
 
-										m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
-										m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
-										m1 = append(m1, []byte(template)[:]...)
-										m1 = append(m1, []byte("\n```\n")[:]...)
-										// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-										if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-											msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
-												`> $\uparrow$ Esto es una plantilla que se repite ` + strconv.Itoa(b2.Stats().KeyN) +
-												` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n'" +
-												string(q1) + "'\n'" + string(q2) +
-												"'\n```\n" + `\end{minipage}` + "\n\n"}
-										} else {
-											log.Fatalf("failed to convert str to int64: %v", err)
+											m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
+											m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
+											m1 = append(m1, []byte(template)[:]...)
+											m1 = append(m1, []byte("\n```\n")[:]...)
+											// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+											if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+												msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
+													`> $\uparrow$ Esto es una plantilla que se repite ` + strconv.Itoa(b2.Stats().KeyN) +
+													` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n'" +
+													string(q1) + "'\n'" + string(q2) +
+													"'\n```\n" + `\end{minipage}` + "\n\n"}
+											} else {
+												log.Fatalf("failed to convert str to int64: %v", err)
+											}
 										}
 									}
-								}
-							} else {
-								if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-									m1 := []byte(v)
-									msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
 								} else {
-									log.Fatalf("failed to convert str to int64: %v", err)
+									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+										m1 := []byte(v)
+										msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
+									} else {
+										log.Fatalf("failed to convert str to int64: %v", err)
+									}
 								}
 							}
+							included.Add(string(sqlIdx))
 						}
-						included.Add(string(sqlIdx))
 					}
 				}
 				return nil
