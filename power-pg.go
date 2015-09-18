@@ -551,7 +551,7 @@ func logReport() {
 
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
-
+				if b != nil {
 				b1 := b.Bucket([]byte("queries"))
 				if b1 != nil {
 					c := b1.Cursor()
@@ -586,7 +586,7 @@ func logReport() {
 						}
 					}
 				}
-				return nil
+				}return nil
 			})
 			graph.Process()
 			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE, 0777)
