@@ -552,41 +552,42 @@ func logReport() {
 			err := db.View(func(tx *bolt.Tx) error {
 				b := tx.Bucket([]byte(channel))
 				if b != nil {
-				b1 := b.Bucket([]byte("queries"))
-				if b1 != nil {
-					c := b1.Cursor()
-					for k, v := c.First(); k != nil; k, v = c.Next() {
-						sqlIdx := v[:30]
+					b1 := b.Bucket([]byte("queries"))
+					if b1 != nil {
+						c := b1.Cursor()
+						for k, v := c.First(); k != nil; k, v = c.Next() {
+							sqlIdx := v[:30]
 
-						b2 := b.Bucket(sqlIdx)
-						if b2 != nil {
-							c1 := b2.Cursor()
-							k1, q1 := c1.First()
-							kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
-							if err != nil {
-								log.Fatalf("failed to convert str to int64: %v", err)
-							}
-							// has many
-							if b2.Stats().KeyN > 1 {
-								// if !included.Contains(string(sqlIdx)) {
-								_, q2 := c1.Last()
-								template := ""
-								if !bytes.Equal(q1, q2) {
-									template = utils.GetVariables(string(q1), string(q2))
+							b2 := b.Bucket(sqlIdx)
+							if b2 != nil {
+								c1 := b2.Cursor()
+								k1, q1 := c1.First()
+								kI, err := strconv.ParseInt(string(bytes.TrimLeft(k, "0")), 10, 64)
+								if err != nil {
+									log.Fatalf("failed to convert str to int64: %v", err)
 								}
-								graph.SeqStrings[int(kI)] = template
-							} else {
-								graph.SeqStrings[int(kI)] = string(v)
+								// has many
+								if b2.Stats().KeyN > 1 {
+									// if !included.Contains(string(sqlIdx)) {
+									_, q2 := c1.Last()
+									template := ""
+									if !bytes.Equal(q1, q2) {
+										template = utils.GetVariables(string(q1), string(q2))
+									}
+									graph.SeqStrings[int(kI)] = template
+								} else {
+									graph.SeqStrings[int(kI)] = string(v)
+								}
+								k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
+								if err != nil {
+									log.Fatalf("failed to convert str to int64: %v", err)
+								}
+								graph.Seq = append(graph.Seq, int(k1Int))
 							}
-							k1Int, err := strconv.ParseInt(string(bytes.TrimLeft(k1, "0")), 10, 64)
-							if err != nil {
-								log.Fatalf("failed to convert str to int64: %v", err)
-							}
-							graph.Seq = append(graph.Seq, int(k1Int))
 						}
 					}
 				}
-				}return nil
+				return nil
 			})
 			graph.Process()
 			f, err := os.OpenFile(strings.Replace(fname, "report-", "diagram-", -1)+".pu", os.O_WRONLY|os.O_CREATE, 0777)
