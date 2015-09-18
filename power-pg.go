@@ -435,6 +435,7 @@ func logReport() {
 					log.Warning("create bucket: %s", err)
 					return fmt.Errorf("create bucket: %s", err)
 				}
+				log.Debug("created bucket: %s\n", channel)
 
 				// query
 				b1, err := b.CreateBucketIfNotExists([]byte("queries"))
@@ -442,11 +443,14 @@ func logReport() {
 					log.Warning("failed to create bucket queries\n")
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
+				log.Debug("created bucket: queries\n")
+
 				err = b1.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+				log.Debug("put %s on bucket %s", m, "queries")
 
 				// query alikes
 				b2, err := b.CreateBucketIfNotExists(sqlIdx)
@@ -454,11 +458,14 @@ func logReport() {
 					log.Warning("failed to create bucket %s\n", string(sqlIdx))
 					return fmt.Errorf("failed to create bucket %s\n", string(sqlIdx))
 				}
+				log.Debug("created bucket: %s\n", string(sqlIdx))
+
 				err = b2.Put([]byte(fmt.Sprintf("%05d", idx)), []byte(m))
 				if err != nil {
 					log.Warning("put %s on bucket %s: %s", m, string(sqlIdx), err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, string(sqlIdx), err)
 				}
+				log.Debug("put %s on bucket %s", m, string(sqlIdx))
 
 				// times
 				b3, err := b2.CreateBucketIfNotExists([]byte("times"))
@@ -466,6 +473,7 @@ func logReport() {
 					log.Warning("failed to create bucket queries\n")
 					return fmt.Errorf("failed to create bucket queries\n")
 				}
+				log.Debug("created bucket: %s\n", "times")
 
 				log.Warning("Running time: %s\n", msg.Time.String())
 
@@ -474,6 +482,7 @@ func logReport() {
 					log.Warning("put %s on bucket %s: %s", m, "queries", err)
 					return fmt.Errorf("put %s on bucket %s: %s", m, "queries", err)
 				}
+				log.Debug("put %s on bucket %s", msg.Time.String(), "times")
 				return nil
 			})
 			if err != nil {
