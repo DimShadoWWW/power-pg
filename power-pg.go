@@ -652,6 +652,9 @@ func logReport() {
 
 										_, q1 := c1.First()
 										_, q2 := c1.Last()
+										if q1 == nil || q2 == nil {
+											goto onequery
+										}
 
 										totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
 										promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
@@ -665,7 +668,6 @@ func logReport() {
 										// if err != nil {
 										// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
 										// }
-
 										if bytes.Equal(q1, q2) {
 											// generate template comparing first and last values
 											template := string(q1)
@@ -710,6 +712,7 @@ func logReport() {
 										}
 									}
 								} else {
+								onequery:
 									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 										m1 := []byte(v)
 										msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
