@@ -653,66 +653,70 @@ func logReport() {
 										_, q1 := c1.First()
 										_, q2 := c1.Last()
 										if q1 == nil || q2 == nil {
-											goto onequery
-										}
-
-										totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
-										promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
-										log.Warning("totalTimeDur: %#v\n", totalTimeDur)
-										log.Warning("promTimeDur: %#v\n", promTimeDur)
-										// totalTimeDur, err := time.ParseDuration(string(totalTime))
-										// if err != nil {
-										// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
-										// }
-										// promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
-										// if err != nil {
-										// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
-										// }
-										if bytes.Equal(q1, q2) {
-											// generate template comparing first and last values
-											template := string(q1)
-
-											m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
-											m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
-											m1 = append(m1, []byte(template)[:]...)
-											m1 = append(m1, []byte("\n```\n")[:]...)
-											// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-											log.Warning("k: %#v\n", k)
 											if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-												msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
-													`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
-													` veces` + "\n\n" + `Ejemplos:` + "\n" +
-													`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
-													string(q1) + "\n" + string(q2) +
-													"\n```\n" + `\end{minipage}` + "\n\n"}
-											} else {
-												log.Fatalf("failed to convert str to int64 3: %v", err)
-											}
-										} else {
-											// generate template comparing first and last values
-											template := utils.GetVariables(string(q1), string(q2))
-											log.Debug("q1: %s\n", q1)
-											log.Debug("q2: %s\n", q2)
-											log.Debug("template: %s\n", template)
-
-											m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
-											m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
-											m1 = append(m1, []byte(template)[:]...)
-											m1 = append(m1, []byte("\n```\n")[:]...)
-											// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
-											if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
-												msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
-													`> $\uparrow$ Esto es una plantilla que se repite ` + strconv.Itoa(b2.Stats().KeyN) +
-													` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n'" +
-													string(q1) + "'\n'" + string(q2) +
-													"'\n```\n" + `\end{minipage}` + "\n\n"}
+												m1 := []byte(v)
+												msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
 											} else {
 												log.Fatalf("failed to convert str to int64: %v", err)
+											}
+										} else {
+											totalTimeDur := time.Unix(0, totalTime).Sub(time.Unix(int64(0), 0))
+											promTimeDur := time.Unix(0, promTime).Sub(time.Unix(int64(0), 0))
+											log.Warning("totalTimeDur: %#v\n", totalTimeDur)
+											log.Warning("promTimeDur: %#v\n", promTimeDur)
+											// totalTimeDur, err := time.ParseDuration(string(totalTime))
+											// if err != nil {
+											// 	log.Fatalf("failure parsing duration 3 %d\n%#v\n%s\n", totalTime, totalTimeDur, err)
+											// }
+											// promTimeDur, err := time.ParseDuration(string(promTime) + "ns")
+											// if err != nil {
+											// 	log.Fatalf("failure parsing duration 2 %d\n%#v\n%s\n", promTime, promTimeDur, err)
+											// }
+											if bytes.Equal(q1, q2) {
+												// generate template comparing first and last values
+												template := string(q1)
+
+												m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
+												m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
+												m1 = append(m1, []byte(template)[:]...)
+												m1 = append(m1, []byte("\n```\n")[:]...)
+												// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+												log.Warning("k: %#v\n", k)
+												if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+													msgOut <- msgStruct{Type: "BM1", ID: s, Content: string(m1) + "\n\n" +
+														`> $\uparrow$ Esta query se realiza ` + strconv.Itoa(b2.Stats().KeyN) +
+														` veces` + "\n\n" + `Ejemplos:` + "\n" +
+														`\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n" +
+														string(q1) + "\n" + string(q2) +
+														"\n```\n" + `\end{minipage}` + "\n\n"}
+												} else {
+													log.Fatalf("failed to convert str to int64 3: %v", err)
+												}
+											} else {
+												// generate template comparing first and last values
+												template := utils.GetVariables(string(q1), string(q2))
+												log.Debug("q1: %s\n", q1)
+												log.Debug("q2: %s\n", q2)
+												log.Debug("template: %s\n", template)
+
+												m1 := []byte(fmt.Sprintf("\n\ntiempo individual promedio: %s\ntiempo total: %s\n", promTimeDur.String(), totalTimeDur.String()))
+												m1 = append(m1, []byte("\n```sql,classoffset=1,morekeywords={XXXXXX},keywordstyle=\\color{black}\\colorbox{yellowgreen},classoffset=0\n")[:]...)
+												m1 = append(m1, []byte(template)[:]...)
+												m1 = append(m1, []byte("\n```\n")[:]...)
+												// m1 = append(m1, []byte("\n\n> $\uparrow$ Esto es una plantilla que se repite\n\n")[:]...)
+												if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
+													msgOut <- msgStruct{Type: "BM", ID: s, Content: string(m1) + "\n\n" +
+														`> $\uparrow$ Esto es una plantilla que se repite ` + strconv.Itoa(b2.Stats().KeyN) +
+														` veces` + "\n\n" + `Ejemplos:` + "\n" + `\begin{minipage}[c]{\textwidth}` + "\n```sql,frame=lrtb\n'" +
+														string(q1) + "'\n'" + string(q2) +
+														"'\n```\n" + `\end{minipage}` + "\n\n"}
+												} else {
+													log.Fatalf("failed to convert str to int64: %v", err)
+												}
 											}
 										}
 									}
 								} else {
-								onequery:
 									if s, err := strconv.ParseInt(strings.Trim(string(k), " "), 10, 64); err == nil {
 										m1 := []byte(v)
 										msgOut <- msgStruct{Type: "S", ID: s, Content: string(m1), TimeStr: string(thisQueryTime)}
